@@ -1,0 +1,355 @@
+---
+import { supabase } from "../lib/supabase";
+interface Props {
+  name: string;
+  email: string;
+  username: string;
+}
+
+const { name, email, username } = Astro.props;
+
+const DISCORD_INVITE_URL = import.meta.env.PUBLIC_DISCORD_INVITE_URL || "#";
+
+// Check if user is already verified
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+const isVerified =
+  session?.user?.email === email && session?.user?.email_confirmed_at;
+---
+
+<div class="space-y-8 animate-fade-in">
+  <div class="text-center">
+    <h2 class="text-2xl font-bold text-white">Welcome aboard, {name}! 🎉</h2>
+    <p class="mt-2 text-slate-300">
+      Let's get you set up with everything you need.
+    </p>
+  </div>
+
+  <div class="space-y-4">
+    <!-- Email Verification Step -->
+    <div
+      class="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50"
+    >
+      <div class="flex-1">
+        <h3 class="font-semibold text-white">1. Verify Your Email</h3>
+        {
+          isVerified ? (
+            <p class="text-sm text-slate-300">
+              Awesome! You can now login anytime with {email}
+            </p>
+          ) : (
+            <p class="text-sm text-slate-300">
+              Check your inbox for the login link to instantly verify your
+              account.
+            </p>
+          )
+        }
+      </div>
+      <div class="flex-shrink-0">
+        <button
+          id="verifyEmailBtn"
+          disabled={isVerified}
+          class:list={[
+            "px-4 py-2 text-sm font-medium rounded-full",
+            isVerified
+              ? "bg-emerald-500 text-white"
+              : "bg-slate-700 text-slate-300 cursor-not-allowed",
+          ]}
+          data-email={email}
+          data-verified={isVerified}
+        >
+          {isVerified ? "✅" : <span class="inline-block w-4 h-4">⏳</span>}
+        </button>
+      </div>
+    </div>
+
+    <!-- Username Claim Step -->
+    <div
+      class="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50"
+    >
+      <div class="flex-1">
+        <h3 class="font-semibold text-white">2. Claim Your Username</h3>
+        <p class="text-sm text-slate-300">Secure your spot as @{username}</p>
+        <p id="claimError" class="mt-1 text-sm text-red-400 hidden"></p>
+      </div>
+      <div class="flex-shrink-0">
+        <button
+          id="claimUsernameBtn"
+          disabled={!isVerified}
+          class:list={[
+            "px-4 py-2 text-sm font-medium rounded-full inline-flex items-center gap-2",
+            isVerified
+              ? "bg-primary-500 text-white hover:bg-primary-600"
+              : "bg-slate-700 text-slate-300 cursor-not-allowed",
+          ]}
+          data-username={username}
+        >
+          <span>Claim</span>
+          <span id="claimSpinner" class="hidden">
+            <svg
+              class="animate-spin h-4 w-4"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Discord Join Step -->
+    <div
+      class="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50"
+    >
+      <div class="flex-1">
+        <h3 class="font-semibold text-white">3. Join Our Discord</h3>
+        <p class="text-sm text-slate-300">Connect with fellow builders</p>
+      </div>
+      <div class="flex-shrink-0">
+        <a
+          href={DISCORD_INVITE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          id="discordJoinBtn"
+          class="inline-block px-4 py-2 text-sm font-medium rounded-full bg-[#5865F2] text-white hover:bg-[#4752C4] transition-colors"
+        >
+          Join Discord
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  type ConfettiFunction = (options?: {
+    particleCount?: number;
+    spread?: number;
+    origin?: { y: number };
+  }) => void;
+
+  class WelcomeSteps extends HTMLElement {
+    private stepsCompleted = 0;
+    private readonly TOTAL_STEPS = 3;
+    private confetti?: ConfettiFunction;
+
+    constructor() {
+      super();
+      this.init();
+    }
+
+    async init() {
+      await this.importConfetti();
+
+      // Check if email is already verified and increment step
+      const verifyEmailBtn = document.getElementById(
+        "verifyEmailBtn"
+      ) as HTMLButtonElement;
+      if (verifyEmailBtn?.getAttribute("data-verified") === "true") {
+        this.incrementSteps();
+      } else {
+        this.setupEmailVerification();
+      }
+
+      this.setupUsernameClaimButton();
+      this.setupDiscordButton();
+    }
+
+    private async importConfetti() {
+      const confettiModule = await import("canvas-confetti");
+      this.confetti = confettiModule.default;
+    }
+
+    private setupEmailVerification() {
+      const verifyEmailBtn = document.getElementById(
+        "verifyEmailBtn"
+      ) as HTMLButtonElement;
+      if (!verifyEmailBtn) return;
+
+      const checkEmailVerification = async () => {
+        try {
+          const email = verifyEmailBtn.getAttribute("data-email");
+          const response = await fetch("/api/auth/check-verification", {
+            method: "POST",
+            body: JSON.stringify({ email }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (response.ok) {
+            const { verified } = await response.json();
+            if (verified) {
+              verifyEmailBtn.innerHTML = "✅";
+              verifyEmailBtn.disabled = true;
+              verifyEmailBtn.classList.remove(
+                "bg-slate-700",
+                "text-slate-300",
+                "cursor-not-allowed"
+              );
+              verifyEmailBtn.classList.add("bg-emerald-500", "text-white");
+
+              // Enable username claim button
+              const claimUsernameBtn = document.getElementById(
+                "claimUsernameBtn"
+              ) as HTMLButtonElement;
+              if (claimUsernameBtn) {
+                this.enableClaimButton(claimUsernameBtn);
+              }
+
+              this.incrementSteps();
+              return true;
+            }
+          }
+          return false;
+        } catch (error) {
+          console.error("Error checking email verification:", error);
+          return false;
+        }
+      };
+
+      // Poll for email verification every 5 seconds
+      const pollInterval = setInterval(async () => {
+        const verified = await checkEmailVerification();
+        if (verified) {
+          clearInterval(pollInterval);
+        }
+      }, 5000);
+    }
+
+    private setupUsernameClaimButton() {
+      const claimUsernameBtn = document.getElementById(
+        "claimUsernameBtn"
+      ) as HTMLButtonElement;
+      const claimSpinner = document.getElementById("claimSpinner");
+      const claimError = document.getElementById("claimError");
+      if (!claimUsernameBtn || !claimSpinner || !claimError) return;
+
+      console.log("setup claim button successful");
+
+      const setLoading = (isLoading: boolean) => {
+        claimUsernameBtn.disabled = isLoading;
+        if (isLoading) {
+          claimSpinner.classList.remove("hidden");
+          claimUsernameBtn.querySelector("span:first-child")!.textContent =
+            "Claiming...";
+        } else {
+          claimSpinner.classList.add("hidden");
+          claimUsernameBtn.querySelector("span:first-child")!.textContent =
+            "Claim";
+        }
+      };
+
+      const showError = (message: string) => {
+        console.error("Claim error:", message);
+        claimError.textContent = message;
+        claimError.classList.remove("hidden");
+        setTimeout(() => {
+          claimError.classList.add("hidden");
+        }, 5000);
+      };
+
+      claimUsernameBtn.addEventListener("click", async () => {
+        console.log("Claim button clicked");
+        try {
+          setLoading(true);
+          claimError.classList.add("hidden");
+
+          const username = claimUsernameBtn.getAttribute("data-username");
+          console.log("Attempting to claim username:", username);
+
+          const response = await fetch("/api/profile/claim", {
+            method: "POST",
+            body: JSON.stringify({ username }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include", // Important: include credentials for session
+          });
+
+          console.log("Claim response status:", response.status);
+          const result = await response.json();
+          console.log("Claim response:", result);
+
+          if (response.ok && result.success) {
+            console.log("Username claimed successfully");
+            // Replace the entire button content with checkmark
+            claimUsernameBtn.innerHTML = `<span class="inline-flex items-center">✅</span>`;
+            claimUsernameBtn.disabled = true;
+            claimUsernameBtn.classList.remove(
+              "bg-primary-500",
+              "hover:bg-primary-600"
+            );
+            claimUsernameBtn.classList.add("bg-emerald-500");
+            this.incrementSteps();
+          } else {
+            console.error("Failed to claim username:", result.error);
+            setLoading(false);
+            showError(result.error || "Failed to claim username");
+          }
+        } catch (error) {
+          console.error("Error claiming username:", error);
+          setLoading(false);
+          showError("Something went wrong. Please try again.");
+        }
+      });
+    }
+
+    private enableClaimButton(button: HTMLButtonElement) {
+      button.disabled = false;
+      button.classList.remove(
+        "bg-slate-700",
+        "text-slate-300",
+        "cursor-not-allowed"
+      );
+      button.classList.add(
+        "bg-primary-500",
+        "text-white",
+        "hover:bg-primary-600"
+      );
+    }
+
+    private setupDiscordButton() {
+      const discordJoinBtn = document.getElementById("discordJoinBtn");
+      if (!discordJoinBtn) return;
+
+      discordJoinBtn.addEventListener("click", () => {
+        setTimeout(() => {
+          const checkmark = document.createElement("span");
+          checkmark.textContent = "✅";
+          checkmark.classList.add("ml-2");
+          discordJoinBtn.appendChild(checkmark);
+          this.incrementSteps();
+        }, 1000);
+      });
+    }
+
+    private incrementSteps() {
+      this.stepsCompleted++;
+      if (this.stepsCompleted === this.TOTAL_STEPS) {
+        // Trigger confetti when all steps are completed
+        this.confetti?.({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+      }
+    }
+  }
+
+  // Register the custom element
+  customElements.define("welcome-steps", WelcomeSteps);
+</script>

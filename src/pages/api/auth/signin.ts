@@ -19,32 +19,34 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     });
 
     if (error) {
-      return new Response(error.message, { status: 500 });
+      return redirect(`/signin?error=${encodeURIComponent(error.message)}`);
     }
 
     return redirect(data.url);
   }
 
   if (!email) {
-    return new Response("Email is required!", { status: 400 });
+    return redirect("/signin?error=Email is required!");
   }
 
-  // const { data, error } = await supabase.auth.signInWithPassword({
-  //   email,
-  //   password,
-  // });
+  try {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: import.meta.env.DEV
+          ? "http://localhost:1234/api/auth/callback"
+          : "https://12in12.pro/api/auth/callback",
+      },
+    });
 
-  const { data, error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      shouldCreateUser: true,
-    },
-  });
-  console.log("🚀 ~ constPOST:APIRoute= ~ data:", data);
+    if (error) {
+      return redirect(`/signin?error=${encodeURIComponent(error.message)}`);
+    }
 
-  if (error) {
-    return new Response(error.message, { status: 500 });
+    return redirect("/signin?success=true");
+  } catch (err) {
+    const error = err as Error;
+    return redirect(`/signin?error=${encodeURIComponent(error.message)}`);
   }
-
-  return new Response("Sign in successful!", { status: 200 });
 };

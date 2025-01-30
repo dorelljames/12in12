@@ -2,16 +2,10 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
-import { Client } from "@notionhq/client";
-
-const notion = new Client({
-  auth: import.meta.env.PUBLIC_NOTION_TOKEN,
-});
-
-const DATABASE_ID = import.meta.env.PUBLIC_NOTION_DATABASE_ID;
+import WelcomeSteps from "../components/WelcomeSteps.astro";
 
 type FormState = {
-  success?: string;
+  success?: boolean;
   error?: string;
   errors?: {
     name?: string;
@@ -27,80 +21,23 @@ type FormState = {
   };
 };
 
+// Check URL parameters for form submission
+const urlParams = Astro.url.searchParams;
+const name = urlParams.get("name");
+const email = urlParams.get("email");
+const username = urlParams.get("username");
+
 let formState: FormState = {};
-
-// Handle form submission
-if (Astro.request.method === "POST") {
-  try {
-    const data = await Astro.request.formData();
-    const name = data.get("name")?.toString().trim();
-    const email = data.get("email")?.toString().trim();
-    const reason = data.get("reason")?.toString().trim();
-    const username = data.get("username")?.toString().trim();
-
-    // Store form values
-    formState.values = {
-      name: name ?? "",
-      email: email ?? "",
-      reason: reason ?? "",
-      username: username ?? "",
-    };
-
-    // Validate fields
-    formState.errors = {};
-
-    if (!name) {
-      formState.errors.name = "Please tell us your name";
-    } else if (name.length < 2) {
-      formState.errors.name = "Name must be at least 2 characters";
-    }
-
-    if (!email) {
-      formState.errors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      formState.errors.email = "Please enter a valid email address";
-    }
-
-    if (!reason) {
-      formState.errors.reason =
-        "Please share what excites you about the program";
-    } else if (reason.length < 10) {
-      formState.errors.reason =
-        "Please provide a bit more detail (at least 10 characters)";
-    }
-
-    // If there are any errors, don't proceed
-    if (Object.keys(formState.errors).length > 0) {
-      formState.error = "Please fix the errors below";
-      return;
-    } else {
-      await notion.pages.create({
-        parent: { database_id: DATABASE_ID },
-        properties: {
-          Name: {
-            title: [{ text: { content: name } }],
-          },
-          Email: {
-            email: email,
-          },
-          Reason: {
-            rich_text: [{ text: { content: reason } }],
-          },
-          Username: {
-            rich_text: [{ text: { content: username } }],
-          },
-        },
-      });
-
-      formState.success =
-        "Thanks for joining! Check your inbox for the next steps. 🎉";
-      // Clear form values on success
-      formState.values = undefined;
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    formState.error = "Something went wrong. Please try again...";
-  }
+if (name && email && username) {
+  formState = {
+    success: true,
+    values: {
+      name,
+      email,
+      username,
+      reason: "", // We don't need to pass this to welcome steps
+    },
+  };
 }
 ---
 
@@ -116,195 +53,237 @@ if (Astro.request.method === "POST") {
       >
       </div>
 
-      <div class="relative mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16 animate-fade-in">
-          <span class="text-primary-400 font-medium">Join & Build 💪</span>
-          <h1
-            class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl"
-          >
-            Let's Build Something Amazing Together
-          </h1>
-          <p class="mt-4 text-lg text-slate-300">
-            I'm excited to have you join this journey. Let's get to know each
-            other a bit better.
-          </p>
-        </div>
-
-        <div class="my-8">
-          {
-            formState.success && (
-              <div class="text-center font-bold">
-                <p class="text-emerald-400">{formState.success}</p>
+      <div
+        class="relative mx-auto max-w-2xl px-4 sm:px-6 lg:px-8"
+        id="mainContent"
+      >
+        {
+          !formState.success && (
+            <>
+              <div class="text-center mb-16 animate-fade-in">
+                <span class="text-primary-400 font-medium">
+                  Join & Build 💪
+                </span>
+                <h1 class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                  Let's Build Something Amazing Together
+                </h1>
+                <p class="mt-4 text-lg text-slate-300">
+                  We're excited to have you join this journey. Let's get to know
+                  each other a bit better.
+                </p>
               </div>
-            )
-          }
-          {
-            formState.error && (
-              <div class="text-center font-semibold">
-                <p class="text-red-400">{formState.error}</p>
-              </div>
-            )
-          }
-        </div>
 
-        <form
-          method="POST"
-          class="space-y-8 animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50"
-        >
-          <div class="space-y-6">
-            <div>
-              <label
-                for="name"
-                class="block text-sm font-medium text-slate-300"
+              <div class="my-8">
+                {formState.error && (
+                  <div class="text-center font-semibold">
+                    <p class="text-red-400">{formState.error}</p>
+                  </div>
+                )}
+              </div>
+
+              <form
+                id="joinForm"
+                class="space-y-8 animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50"
               >
-                What should I call you?
-              </label>
-              <div class="mt-2">
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  required
-                  minlength="2"
-                  value={formState.values?.name}
-                  class:list={[
-                    "block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500",
-                    formState.errors?.name ? "ring-red-500" : "ring-slate-600",
-                  ]}
-                  placeholder="Your name"
-                />
-                {
-                  formState.errors?.name && (
-                    <p class="mt-1 text-sm text-red-400">
-                      {formState.errors.name}
+                <div class="space-y-6">
+                  <div>
+                    <label
+                      for="name"
+                      class="block text-sm font-medium text-slate-300"
+                    >
+                      What should we call you?
+                    </label>
+                    <div class="mt-2">
+                      <input
+                        type="text"
+                        name="name"
+                        id="name"
+                        required
+                        minlength="2"
+                        value={formState.values?.name}
+                        class:list={[
+                          "block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500",
+                          formState.errors?.name
+                            ? "ring-red-500"
+                            : "ring-slate-600",
+                        ]}
+                        placeholder="Your name"
+                      />
+                      {formState.errors?.name && (
+                        <p class="mt-1 text-sm text-red-400">
+                          {formState.errors.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      for="username"
+                      class="block text-sm font-medium text-slate-300"
+                    >
+                      What would your personal URL here be like? (e.g.
+                      <a
+                        href="https://12in12.pro/dorelljames"
+                        target="_blank"
+                        class="text-purple-500 hover:underline"
+                      >
+                        12in12.pro/dorelljames
+                      </a>
+                      )
+                    </label>
+                    <div class="mt-2">
+                      <div class="relative flex rounded-md shadow-sm">
+                        <span class="inline-flex items-center px-3 rounded-l-md border-r border-slate-600 bg-slate-700 text-slate-400 text-sm">
+                          https://12in12.pro/
+                        </span>
+                        <input
+                          type="text"
+                          name="username"
+                          id="username"
+                          required
+                          value={formState.values?.username}
+                          class:list={[
+                            "block w-full rounded-none rounded-r-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500",
+                            formState.errors?.username
+                              ? "ring-red-500"
+                              : "ring-slate-600",
+                          ]}
+                          placeholder="username"
+                        />
+                      </div>
+                      {formState.errors?.username && (
+                        <p class="mt-1 text-sm text-red-400">
+                          {formState.errors.username}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      for="email"
+                      class="block text-sm font-medium text-slate-300"
+                    >
+                      Where can we reach you?
+                    </label>
+                    <div class="mt-2">
+                      <input
+                        type="email"
+                        name="email"
+                        id="email"
+                        required
+                        value={formState.values?.email}
+                        class:list={[
+                          "block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500",
+                          formState.errors?.email
+                            ? "ring-red-500"
+                            : "ring-slate-600",
+                        ]}
+                        placeholder="your@email.com"
+                      />
+                      {formState.errors?.email && (
+                        <p class="mt-1 text-sm text-red-400">
+                          {formState.errors.email}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      for="reason"
+                      class="block text-sm font-medium text-slate-300"
+                    >
+                      Can you share a bit about yourself and your reasons for
+                      joining?
+                    </label>
+                    <div class="mt-2">
+                      <textarea
+                        id="reason"
+                        name="reason"
+                        rows="4"
+                        required
+                        minlength="10"
+                        class:list={[
+                          "block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500",
+                          formState.errors?.reason
+                            ? "ring-red-500"
+                            : "ring-slate-600",
+                        ]}
+                        placeholder="I'm excited to build..."
+                      >
+                        {formState.values?.reason}
+                      </textarea>
+                      {formState.errors?.reason && (
+                        <p class="mt-1 text-sm text-red-400">
+                          {formState.errors.reason}
+                        </p>
+                      )}
+                    </div>
+                    <p class="mt-2 text-sm text-slate-400">
+                      This helps me understand how I can better support you in
+                      your journey.
                     </p>
-                  )
-                }
-              </div>
-            </div>
-
-            <div>
-              <label
-                for="username"
-                class="block text-sm font-medium text-slate-300"
-              >
-                What would your personal URL here be like? (e.g.
-                <a
-                  href="https://12in12.pro/dorelljames"
-                  target="_blank"
-                  class="text-purple-500 hover:underline"
-                  >12in12.pro/dorelljames</a
-                >)
-              </label>
-              <div class="mt-2">
-                <div class="relative flex rounded-md shadow-sm">
-                  <span
-                    class="inline-flex items-center px-3 rounded-l-md border-r border-slate-600 bg-slate-700 text-slate-400 text-sm"
-                  >
-                    https://12in12.pro/
-                  </span>
-                  <input
-                    type="text"
-                    name="username"
-                    id="username"
-                    required
-                    value={formState.values?.username}
-                    class:list={[
-                      "block w-full rounded-none rounded-r-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500",
-                      formState.errors?.username
-                        ? "ring-red-500"
-                        : "ring-slate-600",
-                    ]}
-                    placeholder="username"
-                  />
+                  </div>
                 </div>
-                {
-                  formState.errors?.username && (
-                    <p class="mt-1 text-sm text-red-400">
-                      {formState.errors.username}
-                    </p>
-                  )
-                }
-              </div>
-            </div>
 
-            <div>
-              <label
-                for="email"
-                class="block text-sm font-medium text-slate-300"
-              >
-                Where can I reach you?
-              </label>
-              <div class="mt-2">
-                <input
-                  type="email"
-                  name="email"
-                  id="email"
-                  required
-                  value={formState.values?.email}
-                  class:list={[
-                    "block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500",
-                    formState.errors?.email ? "ring-red-500" : "ring-slate-600",
-                  ]}
-                  placeholder="your@email.com"
-                />
-                {
-                  formState.errors?.email && (
-                    <p class="mt-1 text-sm text-red-400">
-                      {formState.errors.email}
-                    </p>
-                  )
-                }
-              </div>
-            </div>
+                <div class="flex flex-col gap-4">
+                  <button
+                    type="submit"
+                    id="submitBtn"
+                    class="w-full rounded-full px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-accent-500 hover:from-primary-700 hover:to-accent-600 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span class="inline-flex items-center gap-2">
+                      <span>Count Me In! 🚀</span>
+                      <span id="submitSpinner" class="hidden">
+                        <svg
+                          class="animate-spin h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                          />
+                          <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                      </span>
+                    </span>
+                  </button>
+                  <div class="text-center text-sm text-slate-400">
+                    Have an account?{" "}
+                    <a
+                      href="/login"
+                      class="text-sm text-slate-300 hover:text-slate-200"
+                    >
+                      Login here
+                    </a>
+                  </div>
+                </div>
+              </form>
+            </>
+          )
+        }
 
-            <div>
-              <label
-                for="reason"
-                class="block text-sm font-medium text-slate-300"
-              >
-                What excites you most about this program?
-              </label>
-              <div class="mt-2">
-                <textarea
-                  id="reason"
-                  name="reason"
-                  rows="4"
-                  required
-                  minlength="10"
-                  class:list={[
-                    "block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500",
-                    formState.errors?.reason
-                      ? "ring-red-500"
-                      : "ring-slate-600",
-                  ]}
-                  placeholder="Share your thoughts..."
-                  >{formState.values?.reason}</textarea
-                >
-                {
-                  formState.errors?.reason && (
-                    <p class="mt-1 text-sm text-red-400">
-                      {formState.errors.reason}
-                    </p>
-                  )
-                }
-              </div>
-              <p class="mt-2 text-sm text-slate-400">
-                This helps me understand how I can better support you in your
-                journey.
-              </p>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-4">
-            <button
-              type="submit"
-              class="flex-1 rounded-full px-6 py-3 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-accent-500 hover:from-primary-700 hover:to-accent-600 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all"
-            >
-              Count Me In! 🚀
-            </button>
-          </div>
-        </form>
+        {
+          formState.success && formState.values && (
+            <WelcomeSteps
+              name={formState.values.name}
+              email={formState.values.email}
+              username={formState.values.username}
+            />
+          )
+        }
 
         <div
           class="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 animate-fade-in"
@@ -326,3 +305,85 @@ if (Astro.request.method === "POST") {
 
   <Footer />
 </Layout>
+
+<script>
+  const form = document.getElementById("joinForm") as HTMLFormElement;
+  const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
+  const submitSpinner = document.getElementById("submitSpinner");
+  const mainContent = document.getElementById("mainContent");
+
+  // Function to show loading state
+  function setLoading(isLoading: boolean) {
+    if (submitBtn && submitSpinner) {
+      submitBtn.disabled = isLoading;
+      if (isLoading) {
+        submitSpinner.classList.remove("hidden");
+        submitBtn.querySelector("span:first-child")!.textContent = "Joining...";
+      } else {
+        submitSpinner.classList.add("hidden");
+        submitBtn.querySelector("span:first-child")!.textContent =
+          "Count Me In! 🚀";
+      }
+    }
+  }
+
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setLoading(true);
+
+      try {
+        const formData = new FormData(form);
+        const response = await fetch("/api/join", {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Redirect to the same page with success state
+          const searchParams = new URLSearchParams({
+            name: formData.get("name") as string,
+            email: formData.get("email") as string,
+            username: formData.get("username") as string,
+          });
+
+          window.location.href = `${window.location.pathname}?${searchParams.toString()}`;
+        } else {
+          setLoading(false);
+
+          // Show errors
+          if (result.errors) {
+            Object.entries(result.errors).forEach(([field, message]) => {
+              const input = form.querySelector(`[name="${field}"]`);
+              if (input) {
+                input.classList.add("ring-red-500");
+                const errorElement =
+                  input.parentElement?.querySelector(".text-red-400");
+                if (errorElement) {
+                  errorElement.textContent = message as string;
+                }
+              }
+            });
+          }
+
+          // Show general error message
+          if (result.error) {
+            const errorDiv = document.createElement("div");
+            errorDiv.className = "text-center font-semibold";
+            errorDiv.innerHTML = `<p class="text-red-400">${result.error}</p>`;
+            form.insertBefore(errorDiv, form.firstChild);
+          }
+        }
+      } catch (error) {
+        setLoading(false);
+        console.error("Error submitting form:", error);
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "text-center font-semibold";
+        errorDiv.innerHTML = `<p class="text-red-400">Something went wrong. Please try again.</p>`;
+        form.insertBefore(errorDiv, form.firstChild);
+      }
+    });
+  }
+</script>

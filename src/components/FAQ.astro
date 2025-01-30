@@ -8,7 +8,7 @@ const faqs = [
   {
     question: "What tools do I use?",
     answer:
-      "You are free to use any tools, including AI and LLMs like ChatGPT for anything including the code, idea, or marketing!",
+      'You are free to use any tools, including AI and LLMs like <a href="https://chat.openai.com" class="text-primary-600 hover:text-primary-700 underline">ChatGPT</a> for anything including the code, idea, or marketing!',
   },
   {
     question: "Should I be spending money now?",
@@ -18,62 +18,62 @@ const faqs = [
   {
     question: "I have zero knowledge on how to get started?",
     answer:
-      "That's perfectly fine! We provide step-by-step guides and a supportive community to help you learn and grow.",
+      'That\'s perfectly fine! We have a very supportive <a href="/join" class="text-primary-600 hover:text-primary-700 underline">community</a> to help you learn and grow.',
   },
   {
     question: `Isn't a month too short to build and ship?`,
     answer:
-      "Not necessarily! Keeping the timeline short aligns with Parkinson's Law: work expands or contracts based on the time given. A hard one-month deadline fosters urgency and focus, encouraging prioritization, reduced distractions, and greater efficiency.",
+      "Not necessarily! Keeping the timeline short aligns with Parkinson's Law: work expands or contracts based on the time given. A hard one-month deadline fosters urgency and focus, encouraging prioritization, reduced distractions, and greater efficiency. Feel free to adjust the timeline to your own pace.",
   },
   {
     question: "What if I fail to finish in a month?",
     answer:
-      "That’s totally okay! The goal of the program is progress, not perfection. Even if you don’t finish in a month, the momentum you’ve built is a win. You can carry over unfinished goals to the next month or adjust your pace.",
+      "That's totally okay! The goal of the program is progress, not perfection. Even if you don't finish in a month, the momentum you've built is a win. You can carry over unfinished goals to the next month or adjust your pace.",
   },
   {
     question: "Do I need coding or technical skills to participate?",
     answer:
-      "Not at all! While some projects may involve technical skills, many can be creative, service-oriented, or personal development-focused. The community and resources are here to guide you no matter your starting point.",
+      'Not at all! While some projects may involve technical skills, many can be creative, service-oriented, or personal development-focused. Check out our <a href="/projects" class="text-primary-600 hover:text-primary-700 underline">projects page</a> to see what others are building. The community and resources are here to support you no matter your starting point.',
   },
   {
     question: "Can I work on more than one project at a time?",
     answer:
-      "It’s recommended to focus on one project per month to ensure deep focus and high-quality results. However, if you feel confident juggling multiple goals, you’re welcome to do so!",
+      "It's recommended to focus on one project per month to ensure deep focus and high-quality results. However, if you feel confident juggling multiple goals, you're welcome to do so!",
   },
   {
     question: "What kind of projects can I work on?",
     answer:
-      "Anything you’re passionate about! This could range from launching a small business, writing a book, developing a personal habit, or learning a new skill. The possibilities are endless, and the program is flexible enough to accommodate any goal.",
+      'Anything you\'re passionate about! This could range from launching a small business, writing a book, developing a personal habit, or learning a new skill. Browse our <a href="/projects" class="text-primary-600 hover:text-primary-700 underline">projects gallery</a> for inspiration. The possibilities are endless, and the program is flexible enough to accommodate any goal.',
   },
   {
     question: "How do I stay motivated throughout the month?",
     answer:
-      "We encourage regular check-ins, accountability groups, and celebrating small wins. The community is here to support you when things get tough, so don’t hesitate to reach out.",
+      'We encourage regular check-ins, accountability groups, and celebrating small wins. Join our <a href="/join" class="text-primary-600 hover:text-primary-700 underline">community</a> to connect with others and stay motivated. The community is here to support you when things get tough, so don\'t hesitate to reach out.',
   },
   {
     question: "How do I know if my project idea is good enough?",
     answer:
-      "Don’t worry about perfection! The program is about taking action and learning along the way. Even if your idea evolves, the experience you gain is invaluable.",
+      "Don't worry about perfection! The program is about taking action and learning along the way. Even if your idea evolves, the experience you gain is invaluable.",
   },
   {
     question: "Do I need to share my progress publicly?",
     answer:
-      "Sharing progress is encouraged but not required. Many find public accountability helpful, but you’re free to keep your journey private if you prefer.",
+      'Sharing progress is encouraged but not required. Many find public accountability helpful, but you\'re free to keep your journey private if you prefer. If you do want to share, you can do so on your <a href="/profile" class="text-primary-600 hover:text-primary-700 underline">personalized profile page</a>.',
   },
   {
     question: "Can I join anytime, or are there specific start dates?",
     answer:
-      "You can join at any time! While many participants align their projects with the calendar month, the program is flexible and can start whenever you’re ready.",
+      "You can join at any time! While many participants align their projects with the calendar month, the program is flexible and can start whenever you're ready.",
   },
   {
     question: "How do I join the community?",
     answer:
-      "Joining the community is easy — just head to our Discord server or check out our onboarding guide to get started. You’ll find plenty of resources and friendly faces to welcome you.",
+      'Joining the community is easy — just head over to the <a href="/join" class="text-primary-600 hover:text-primary-700 underline">join page</a>, fill out the form and follow the instructions. You\'ll find plenty of resources and friendly faces to welcome you.',
   },
   {
     question: "What happens after 12 months?",
     answer:
-      "That’s entirely up to you! Some participants repeat the program with new goals, while others use what they’ve learned to pursue larger projects. The experience is designed to set you up for long-term growth.",
+      "That's entirely up to you! Some participants repeat the program with new goals, while others use what they've learned to pursue larger projects. The experience is designed to set you up for long-term growth.",
   },
 ];
 ---
@@ -97,7 +97,7 @@ const faqs = [
               <dt class="text-lg leading-6 font-medium text-gray-900">
                 {faq.question}
               </dt>
-              <dd class="mt-2 text-base text-gray-500">{faq.answer}</dd>
+              <dd class="mt-2 text-base text-gray-500" set:html={faq.answer} />
             </div>
           ))
         }
