@@ -106,3 +106,72 @@ export const PUT: APIRoute = async ({ request, cookies, params }) => {
     });
   }
 };
+
+export const DELETE: APIRoute = async ({ cookies, params }) => {
+  try {
+    const { id } = params;
+
+    // Get auth tokens from cookies
+    const accessToken = cookies.get("sb-access-token")?.value;
+    const refreshToken = cookies.get("sb-refresh-token")?.value;
+
+    if (!accessToken || !refreshToken) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
+    // Set the session
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
+    // Get the update to verify ownership
+    const { data: update, error: updateError } = await supabase
+      .from("product_updates")
+      .select("profile_id")
+      .eq("id", id)
+      .single();
+
+    if (updateError || !update) {
+      return new Response(JSON.stringify({ error: "Update not found" }), {
+        status: 404,
+      });
+    }
+
+    // Delete the update
+    const { error: deleteError } = await supabase
+      .from("product_updates")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      console.error("Error deleting update:", deleteError);
+      return new Response(
+        JSON.stringify({ error: "Failed to delete update" }),
+        {
+          status: 500,
+        }
+      );
+    }
+
+    return new Response(null, {
+      status: 204, // No content
+    });
+  } catch (error) {
+    console.error("Error processing request:", error);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+    });
+  }
+};
