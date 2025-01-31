@@ -244,9 +244,30 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
           </button>
           <button
             type="submit"
-            class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-lg hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-emerald-500"
+            id="submitProjectButton"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-lg hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {submitButtonText}
+            <span id="submitButtonText">{submitButtonText}</span>
+            <svg
+              id="submitSpinner"
+              class="hidden w-4 h-4 ml-2 animate-spin"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
           </button>
         </div>
       </form>
@@ -259,6 +280,28 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
   const closeButton = document.getElementById("closeProjectModal");
   const cancelButton = document.getElementById("cancelProjectButton");
   const projectForm = document.getElementById("projectForm") as HTMLFormElement;
+  const submitButton = document.getElementById(
+    "submitProjectButton"
+  ) as HTMLButtonElement;
+  const submitButtonText = document.getElementById("submitButtonText");
+  const submitSpinner = document.getElementById("submitSpinner");
+
+  function setLoading(
+    isLoading: boolean,
+    action: "create" | "update" = "create"
+  ) {
+    if (submitButton && submitButtonText && submitSpinner) {
+      submitButton.disabled = isLoading;
+      submitSpinner.classList.toggle("hidden", !isLoading);
+      if (isLoading) {
+        submitButtonText.textContent =
+          action === "create" ? "Creating..." : "Updating...";
+      } else {
+        submitButtonText.textContent =
+          action === "create" ? "Create Project" : "Update Project";
+      }
+    }
+  }
 
   function showModal() {
     modal?.classList.remove("hidden");
@@ -266,8 +309,9 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
 
   function hideModal() {
     modal?.classList.add("hidden");
-    // Reset form when hiding
+    // Reset form and loading state when hiding
     projectForm?.reset();
+    setLoading(false);
   }
 
   // Function to show modal for editing
@@ -312,7 +356,13 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
         projectForm.appendChild(idInput);
       }
 
-      if (projectData.id) idInput.value = projectData.id;
+      if (projectData.id) {
+        idInput.value = projectData.id;
+        setLoading(false, "update");
+      } else {
+        setLoading(false, "create");
+      }
+
       if (titleInput) titleInput.value = projectData.title || "";
       if (descriptionTextarea)
         descriptionTextarea.value = projectData.description || "";
@@ -365,6 +415,8 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
     const method = isEdit ? "PUT" : "POST";
 
     try {
+      setLoading(true, isEdit ? "update" : "create");
+
       const response = await fetch(endpoint, {
         method,
         headers: {
@@ -390,6 +442,7 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
       } else {
         alert("An unexpected error occurred");
       }
+      setLoading(false, isEdit ? "update" : "create");
     }
   });
 
