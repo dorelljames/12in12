@@ -1,10 +1,5 @@
 import type { APIRoute } from "astro";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-);
+import { supabase } from "../../../lib/supabase";
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -18,11 +13,22 @@ export const POST: APIRoute = async ({ request }) => {
     // Check if the user is logged in and their email matches
     const verified =
       session?.user?.email === email && session?.user?.email_confirmed_at;
+    const emailConfirmed = session?.user?.email_confirmed_at ? true : false;
+    const isCurrentUser = session?.user?.email === email;
 
     return new Response(
       JSON.stringify({
         success: true,
         verified,
+        emailConfirmed,
+        isCurrentUser,
+        message: !verified
+          ? !emailConfirmed
+            ? "Please check your email to confirm your account"
+            : !isCurrentUser
+            ? "Email does not match current user"
+            : "Unknown verification error"
+          : "Email verified successfully",
       }),
       { status: 200 }
     );

@@ -142,10 +142,14 @@ export const POST: APIRoute = async ({ request }) => {
       email: email!,
       options: {
         shouldCreateUser: true,
+        emailRedirectTo: import.meta.env.DEV
+          ? "http://localhost:1234/api/auth/confirm"
+          : "https://12in12.pro/api/auth/confirm",
       },
     });
 
     if (error) {
+      console.log("🚀 ~ constPOST:APIRoute= ~ error:", error);
       return new Response(error.message, { status: 500 });
     }
 
