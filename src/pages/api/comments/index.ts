@@ -16,7 +16,7 @@ export const GET: APIRoute = async ({ url }) => {
       .select(
         `
         *,
-        profiles:user_id (
+        profiles:profile_id (
           username,
           full_name,
           avatar_url
@@ -82,13 +82,74 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       .from("comments")
       .insert({
         product_id: productId,
-        user_id: user.id,
+        profile_id: user.id,
         content,
       })
+      .select()
+      .single();
+
+    if (error) {
+      console.log("🚀 ~ returnnewResponse ~ error.message:", error.message);
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+      });
+    }
+
+    return new Response(JSON.stringify(comment));
+  } catch (error) {
+    return new Response(JSON.stringify({ error: "Failed to create comment" }), {
+      status: 500,
+    });
+  }
+};
+
+export const PATCH: APIRoute = async ({ request, cookies }) => {
+  try {
+    // Get auth tokens from cookies
+    const accessToken = cookies.get("sb-access-token")?.value;
+    const refreshToken = cookies.get("sb-refresh-token")?.value;
+
+    if (!accessToken || !refreshToken) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
+    // Set the session
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
+    // Get request body
+    const { commentId, content } = await request.json();
+
+    if (!commentId || !content) {
+      return new Response(
+        JSON.stringify({ error: "Comment ID and content are required" }),
+        { status: 400 }
+      );
+    }
+
+    // Update comment
+    const { data: comment, error } = await supabase
+      .from("comments")
+      .update({ content, updated_at: new Date().toISOString() })
+      .eq("id", commentId)
+      .eq("profile_id", user.id) // Ensure user owns the comment
       .select(
         `
         *,
-        profiles:user_id (
+        profiles:profile_id (
           username,
           full_name,
           avatar_url
@@ -105,7 +166,65 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     return new Response(JSON.stringify(comment));
   } catch (error) {
-    return new Response(JSON.stringify({ error: "Failed to create comment" }), {
+    return new Response(JSON.stringify({ error: "Failed to update comment" }), {
+      status: 500,
+    });
+  }
+};
+
+export const DELETE: APIRoute = async ({ request, cookies }) => {
+  try {
+    // Get auth tokens from cookies
+    const accessToken = cookies.get("sb-access-token")?.value;
+    const refreshToken = cookies.get("sb-refresh-token")?.value;
+
+    if (!accessToken || !refreshToken) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
+    // Set the session
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
+    // Get comment ID from URL
+    const url = new URL(request.url);
+    const commentId = url.searchParams.get("commentId");
+
+    if (!commentId) {
+      return new Response(JSON.stringify({ error: "Comment ID is required" }), {
+        status: 400,
+      });
+    }
+
+    // Delete comment
+    const { error } = await supabase
+      .from("comments")
+      .delete()
+      .eq("id", commentId)
+      .eq("profile_id", user.id); // Ensure user owns the comment
+
+    if (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+      });
+    }
+
+    return new Response(JSON.stringify({ success: true }));
+  } catch (error) {
+    return new Response(JSON.stringify({ error: "Failed to delete comment" }), {
       status: 500,
     });
   }
