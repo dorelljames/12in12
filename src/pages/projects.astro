@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
+import SearchFilter from "../components/SearchFilter.astro";
 import { createClient } from "@supabase/supabase-js";
 
 // Initialize Supabase client
@@ -227,58 +228,131 @@ const getStatusConfig = (status: string = "not_started") => {
 
       {/* Filters */}
       <div
-        class="bg-slate-800/50 rounded-xl shadow-lg border border-slate-700/50 p-6 mb-12 max-w-7xl mx-auto"
+        class="bg-slate-800/50 rounded-xl shadow-lg border border-slate-700/50 p-8 mb-12 max-w-7xl mx-auto"
       >
-        <div class="flex flex-col md:flex-row gap-6 p-2">
-          {/* Status Filter */}
-          <div class="flex-1">
-            <label class="block text-sm font-medium text-slate-300 mb-2"
-              >Status</label
-            >
-            <select
-              class="w-full rounded-lg bg-slate-700 border border-slate-600 text-slate-200 text-sm px-4 py-2.5 appearance-none hover:bg-slate-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-              onchange="window.location.href = this.value"
-            >
-              <option value="/projects" selected={!status}>All Statuses</option>
-              <option
-                value="/projects?status=completed"
-                selected={status === "completed"}
+        <div
+          class="flex items-center justify-between mb-6 pb-6 border-b border-slate-700/50"
+        >
+          <div>
+            <h2 class="text-xl font-semibold text-slate-200">
+              Filter Projects
+            </h2>
+            <p class="text-sm text-slate-400 mt-1">
+              Find the perfect project to explore
+            </p>
+          </div>
+          <button
+            id="clear-filters"
+            class="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
+          >
+            Clear Filters
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Search and Tech Stack */}
+          <div class="space-y-6">
+            {/* Search Input */}
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-2"
+                >Search Projects</label
               >
-                Completed
-              </option>
-              <option
-                value="/projects?status=in_progress"
-                selected={status === "in_progress"}
+              <div class="relative">
+                <input
+                  type="text"
+                  id="search-input"
+                  class="w-full rounded-lg bg-slate-700/50 border border-slate-600 text-slate-200 text-sm px-4 py-3 pl-10 appearance-none hover:bg-slate-700 focus:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Search by title, description, or tech stack..."
+                />
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="w-5 h-5 text-slate-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                      clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Tech Stack Filter */}
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-2"
+                >Tech Stack</label
               >
-                In Progress
-              </option>
-              <option
-                value="/projects?status=not_started"
-                selected={status === "not_started"}
+              <select
+                id="tech-filter"
+                class="w-full rounded-lg bg-slate-700/50 border border-slate-600 text-slate-200 text-sm px-4 py-3 appearance-none hover:bg-slate-700 focus:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
               >
-                Not Started
-              </option>
-            </select>
+                <option value="">All Technologies</option>
+                {techStacks.map((tech) => <option value={tech}>{tech}</option>)}
+              </select>
+            </div>
           </div>
 
-          {/* Month Filter */}
-          <div class="flex-1">
-            <label class="block text-sm font-medium text-slate-300 mb-2"
-              >Month</label
-            >
-            <select
-              class="w-full rounded-lg bg-slate-700 border border-slate-600 text-slate-200 text-sm px-4 py-2.5 appearance-none hover:bg-slate-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-              onchange="window.location.href = this.value"
-            >
-              <option value="/projects" selected={!month}>All Months</option>
-              {
-                months.map((m) => (
-                  <option value={`/projects?month=${m}`} selected={month === m}>
-                    {m} {m === currentMonth ? "(Current)" : ""}
-                  </option>
-                ))
-              }
-            </select>
+          {/* Status and Month */}
+          <div class="space-y-6">
+            {/* Status Filter */}
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-2"
+                >Status</label
+              >
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <a
+                  href="/projects"
+                  class={`px-4 py-2.5 rounded-lg text-center text-sm font-medium transition-colors ${!status ? "bg-primary-900/50 text-primary-200 border border-primary-700/50 shadow-sm" : "bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700"}`}
+                >
+                  All
+                </a>
+                <a
+                  href="/projects?status=completed"
+                  class={`px-4 py-2.5 rounded-lg text-center text-sm font-medium transition-colors ${status === "completed" ? "bg-emerald-900/50 text-emerald-200 border border-emerald-700/50 shadow-sm" : "bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700"}`}
+                >
+                  Completed
+                </a>
+                <a
+                  href="/projects?status=in_progress"
+                  class={`px-4 py-2.5 rounded-lg text-center text-sm font-medium transition-colors ${status === "in_progress" ? "bg-amber-900/50 text-amber-200 border border-amber-700/50 shadow-sm" : "bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700"}`}
+                >
+                  In Progress
+                </a>
+                <a
+                  href="/projects?status=not_started"
+                  class={`px-4 py-2.5 rounded-lg text-center text-sm font-medium transition-colors ${status === "not_started" ? "bg-slate-800/80 text-slate-200 border border-slate-600 shadow-sm" : "bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700"}`}
+                >
+                  Not Started
+                </a>
+              </div>
+            </div>
+
+            {/* Month Filter */}
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-2"
+                >Month</label
+              >
+              <select
+                class="w-full rounded-lg bg-slate-700/50 border border-slate-600 text-slate-200 text-sm px-4 py-3 appearance-none hover:bg-slate-700 focus:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                onchange="window.location.href = this.value"
+              >
+                <option value="/projects" selected={!month}>All Months</option>
+                {
+                  months.map((m) => (
+                    <option
+                      value={`/projects?month=${m}`}
+                      selected={month === m}
+                    >
+                      {m} {m === currentMonth ? "(Current)" : ""}
+                    </option>
+                  ))
+                }
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -292,6 +366,11 @@ const getStatusConfig = (status: string = "not_started") => {
             <a
               href={`/projects/${project.slug}`}
               class="block bg-slate-800/50 rounded-xl shadow-lg hover:shadow-xl transition-all border border-slate-700/50 overflow-hidden group hover:border-primary-500/30"
+              data-project-card={JSON.stringify({
+                title: project.title,
+                description: project.description,
+                tech_stack: project.tech_stack,
+              })}
             >
               {/* Project Thumbnail */}
               <div class="relative h-48 bg-slate-800">
@@ -414,21 +493,137 @@ const getStatusConfig = (status: string = "not_started") => {
       </div>
 
       {/* Empty State */}
-      {
-        (!projects || projects.length === 0) && (
-          <div class="text-center py-12">
-            <div class="text-slate-400 mb-4">🔍</div>
-            <h3 class="text-lg font-medium text-slate-200 mb-2">
-              No Projects Found
-            </h3>
-            <p class="text-slate-400">
-              Try adjusting your filters to find what you're looking for
-            </p>
-          </div>
-        )
-      }
+      <div id="empty-state" class="text-center py-12" style="display: none;">
+        <div class="text-slate-400 mb-4">🔍</div>
+        <h3 class="text-lg font-medium text-slate-200 mb-2">
+          No Projects Found
+        </h3>
+        <p class="text-slate-400">
+          Try adjusting your filters to find what you're looking for
+        </p>
+      </div>
     </div>
   </main>
 
   <Footer />
 </Layout>
+
+<script>
+  let debounceTimer: ReturnType<typeof setTimeout>;
+
+  // Filter projects based on search input and tech filter
+  const filterProjects = () => {
+    const searchInput = document.getElementById(
+      "search-input"
+    ) as HTMLInputElement;
+    const techFilter = document.getElementById(
+      "tech-filter"
+    ) as HTMLSelectElement;
+    const projectCards = document.querySelectorAll("[data-project-card]");
+
+    const searchTerm = searchInput?.value.toLowerCase() || "";
+    const selectedTech = techFilter?.value.toLowerCase() || "";
+
+    let visibleCount = 0;
+
+    projectCards.forEach((card) => {
+      const projectData = JSON.parse(
+        card.getAttribute("data-project-card") || "{}"
+      );
+      const title = projectData.title?.toLowerCase() || "";
+      const description = projectData.description?.toLowerCase() || "";
+      const techStack =
+        projectData.tech_stack?.map((t: string) => t.toLowerCase()) || [];
+
+      const matchesSearch =
+        searchTerm === "" ||
+        title.includes(searchTerm) ||
+        description.includes(searchTerm) ||
+        techStack.some((tech: string) => tech.includes(searchTerm));
+
+      const matchesTech =
+        selectedTech === "" || techStack.includes(selectedTech);
+
+      if (matchesSearch && matchesTech) {
+        (card as HTMLElement).style.display = "";
+        visibleCount++;
+      } else {
+        (card as HTMLElement).style.display = "none";
+      }
+    });
+
+    // Update empty state visibility
+    const emptyState = document.getElementById("empty-state");
+    if (emptyState) {
+      emptyState.style.display = visibleCount === 0 ? "" : "none";
+    }
+
+    // Update clear filters button visibility
+    updateClearFiltersVisibility();
+  };
+
+  // Debounce the filter function for better performance
+  const debounceFilter = () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(filterProjects, 300);
+  };
+
+  // Handle clear filters
+  const clearFiltersBtn = document.getElementById("clear-filters");
+  const searchInput = document.getElementById(
+    "search-input"
+  ) as HTMLInputElement;
+  const techFilter = document.getElementById(
+    "tech-filter"
+  ) as HTMLSelectElement;
+
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener("click", () => {
+      // Clear search input
+      if (searchInput) {
+        searchInput.value = "";
+        searchInput.dispatchEvent(new Event("input"));
+      }
+
+      // Reset tech filter
+      if (techFilter) {
+        techFilter.value = "";
+        techFilter.dispatchEvent(new Event("change"));
+      }
+
+      // Check if we're on a filtered URL
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("status") || url.searchParams.has("month")) {
+        window.location.href = "/projects";
+      }
+    });
+  }
+
+  // Show/hide clear filters button based on filter state
+  const updateClearFiltersVisibility = () => {
+    if (!clearFiltersBtn) return;
+
+    const hasSearch = searchInput?.value.trim() !== "";
+    const hasTechFilter = techFilter?.value !== "";
+    const hasUrlParams =
+      new URL(window.location.href).searchParams.toString() !== "";
+
+    if (hasSearch || hasTechFilter || hasUrlParams) {
+      clearFiltersBtn.style.opacity = "1";
+      clearFiltersBtn.style.pointerEvents = "auto";
+    } else {
+      clearFiltersBtn.style.opacity = "0.5";
+      clearFiltersBtn.style.pointerEvents = "none";
+    }
+  };
+
+  // Initialize
+  document.addEventListener("DOMContentLoaded", () => {
+    // Add event listeners for search and filter
+    searchInput?.addEventListener("input", debounceFilter);
+    techFilter?.addEventListener("change", filterProjects);
+
+    // Initialize clear filters button state
+    updateClearFiltersVisibility();
+  });
+</script>

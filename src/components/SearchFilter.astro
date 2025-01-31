@@ -1,0 +1,130 @@
+---
+interface Props {
+  techStacks: string[];
+}
+
+const { techStacks } = Astro.props;
+---
+
+<div
+  class="bg-slate-800/50 rounded-xl shadow-lg border border-slate-700/50 p-6 mb-12 max-w-7xl mx-auto"
+>
+  <div class="flex flex-col md:flex-row gap-6">
+    {/* Search Input */}
+    <div class="flex-1">
+      <label class="block text-sm font-medium text-slate-300 mb-2"
+        >Search Projects</label
+      >
+      <div class="relative">
+        <input
+          type="text"
+          id="search-input"
+          class="w-full rounded-lg bg-slate-700 border border-slate-600 text-slate-200 text-sm px-4 py-2.5 pl-10 appearance-none hover:bg-slate-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+          placeholder="Search by title, description, or tech stack..."
+        />
+        <div
+          class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+        >
+          <svg
+            class="w-5 h-5 text-slate-400"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+              clip-rule="evenodd"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    {/* Tech Stack Filter */}
+    <div class="flex-1">
+      <label class="block text-sm font-medium text-slate-300 mb-2"
+        >Tech Stack</label
+      >
+      <select
+        id="tech-filter"
+        class="w-full rounded-lg bg-slate-700 border border-slate-600 text-slate-200 text-sm px-4 py-2.5 appearance-none hover:bg-slate-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+      >
+        <option value="">All Technologies</option>
+        {techStacks.map((tech) => <option value={tech}>{tech}</option>)}
+      </select>
+    </div>
+  </div>
+</div>
+
+<script>
+  let debounceTimer: ReturnType<typeof setTimeout>;
+
+  const filterProjects = () => {
+    const searchInput = document.getElementById(
+      "search-input"
+    ) as HTMLInputElement;
+    const techFilter = document.getElementById(
+      "tech-filter"
+    ) as HTMLSelectElement;
+    const projectCards = document.querySelectorAll("[data-project-card]");
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedTech = techFilter.value.toLowerCase();
+
+    projectCards.forEach((card) => {
+      const projectData = JSON.parse(
+        card.getAttribute("data-project-card") || "{}"
+      );
+      const title = projectData.title?.toLowerCase() || "";
+      const description = projectData.description?.toLowerCase() || "";
+      const techStack =
+        projectData.tech_stack?.map((t: string) => t.toLowerCase()) || [];
+
+      const matchesSearch =
+        searchTerm === "" ||
+        title.includes(searchTerm) ||
+        description.includes(searchTerm) ||
+        techStack.some((tech: string) => tech.includes(searchTerm));
+
+      const matchesTech =
+        selectedTech === "" || techStack.includes(selectedTech);
+
+      if (matchesSearch && matchesTech) {
+        (card as HTMLElement).style.display = "";
+      } else {
+        (card as HTMLElement).style.display = "none";
+      }
+    });
+
+    // Update empty state visibility
+    const emptyState = document.getElementById("empty-state");
+    const visibleCards = Array.from(projectCards).filter(
+      (card) => (card as HTMLElement).style.display !== "none"
+    );
+
+    if (emptyState) {
+      if (visibleCards.length === 0) {
+        emptyState.style.display = "";
+      } else {
+        emptyState.style.display = "none";
+      }
+    }
+  };
+
+  const debounceFilter = () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(filterProjects, 300);
+  };
+
+  // Initialize filters
+  const init = () => {
+    const searchInput = document.getElementById("search-input");
+    const techFilter = document.getElementById("tech-filter");
+
+    if (searchInput && techFilter) {
+      searchInput.addEventListener("input", debounceFilter);
+      techFilter.addEventListener("change", filterProjects);
+    }
+  };
+
+  // Initialize when the DOM is ready
+  document.addEventListener("DOMContentLoaded", init);
+</script>
