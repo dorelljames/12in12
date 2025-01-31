@@ -76,10 +76,67 @@ const { data: latestProjects } = await supabase
                       <span class="text-slate-500">🏗️ Building</span>
                     </div>
                   )}
-                  <div class="absolute top-4 right-4 ">
-                    <span class="uppercase px-3 py-1.5 bg-primary-900/50 text-primary-300 rounded-full text-xs font-medium border border-primary-700/50">
-                      {project.status}
-                    </span>
+                  <div class="absolute top-4 right-4">
+                    {(() => {
+                      type StatusConfig = {
+                        [key: string]: {
+                          bg: string;
+                          text: string;
+                          border: string;
+                          label: string;
+                        };
+                      };
+
+                      const statusConfig: StatusConfig = {
+                        completed: {
+                          bg: "bg-green-900/50",
+                          text: "text-green-300",
+                          border: "border-green-700/50",
+                          label: "Completed",
+                        },
+                        in_progress: {
+                          bg: "bg-primary-900/50",
+                          text: "text-primary-300",
+                          border: "border-primary-700/50",
+                          label: "In Progress",
+                        },
+                        not_started: {
+                          bg: "bg-slate-900/50",
+                          text: "text-slate-300",
+                          border: "border-slate-700/50",
+                          label: "Not Started",
+                        },
+                        canceled: {
+                          bg: "bg-red-900/50",
+                          text: "text-red-300",
+                          border: "border-red-700/50",
+                          label: "Canceled",
+                        },
+                        parked: {
+                          bg: "bg-yellow-900/50",
+                          text: "text-yellow-300",
+                          border: "border-yellow-700/50",
+                          label: "Parked",
+                        },
+                      };
+
+                      const config = statusConfig[
+                        project.status as keyof typeof statusConfig
+                      ] || {
+                        bg: "bg-slate-900/50",
+                        text: "text-slate-300",
+                        border: "border-slate-700/50",
+                        label: "Unknown",
+                      };
+
+                      return (
+                        <span
+                          class={`uppercase px-3 py-1.5 ${config.bg} ${config.text} rounded-full text-xs font-medium border ${config.border}`}
+                        >
+                          {config.label}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
 
