@@ -189,9 +189,85 @@ const { data: socialLinks, error: socialLinksError } = await supabase
 
 // Add this before the Layout component
 let editingUpdate: Update | undefined;
+
+// Prepare SEO metadata
+const title = `${profile?.full_name || username}'s Builder Journey - 12 in 12`;
+const description = profile?.bio
+  ? `${profile.bio} • Building ${completedCount} shipped products and ${inProgressCount} in progress.`
+  : `Follow ${profile?.full_name || username}'s journey of building 12 products in 12 months. ${completedCount} products shipped, ${inProgressCount} in progress.`;
+
+// Prepare JSON-LD structured data
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  name: title,
+  description: description,
+  url: Astro.url,
+  mainEntity: {
+    "@type": "Person",
+    name: profile?.full_name || username,
+    alternateName: username,
+    description: profile?.bio,
+    image: profile?.avatar_url,
+    url: Astro.url,
+    ...(socialLinks?.length && {
+      sameAs: socialLinks.map((link) => link.url),
+    }),
+    memberOf: {
+      "@type": "Organization",
+      name: "12 in 12",
+      description: "Community of makers building 12 products in 12 months",
+    },
+    makesOffer: products?.map((product) => ({
+      "@type": "SoftwareApplication",
+      name: product.title,
+      description: product.description,
+      applicationCategory: product.tech_stack?.join(", "),
+      ...(product.demo_url && { url: product.demo_url }),
+      ...(product.github_url && { codeRepository: product.github_url }),
+    })),
+  },
+};
 ---
 
-<Layout title={`${username}'s Builder Journey`}>
+<Layout title={title}>
+  <head slot="head">
+    <!-- Primary Meta Tags -->
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="profile" />
+    <meta property="og:url" content={Astro.url} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta
+      property="og:image"
+      content={profile?.avatar_url ||
+        `${Astro.url.origin}/images/og-profile.png`}
+    />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={Astro.url} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta
+      property="twitter:image"
+      content={profile?.avatar_url ||
+        `${Astro.url.origin}/images/og-profile.png`}
+    />
+
+    <!-- Canonical URL -->
+    <link
+      rel="canonical"
+      href={new URL(`/${username}`, Astro.url.origin).toString()}
+    />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+
   <div class="min-h-screen flex flex-col">
     <Navbar />
     {

@@ -36,9 +36,88 @@ const { data: latestProjects } = await supabase
   .in("status", ["in_progress", "completed"])
   .order("created_at", { ascending: false })
   .limit(6);
+
+// Prepare SEO metadata
+const title = "12 in 12 - Build 12 Products in 12 Months";
+const description =
+  "Join a community of makers building and shipping 12 products in 12 months. Share your journey, get feedback, and stay accountable.";
+
+// Prepare JSON-LD structured data
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "12 in 12",
+  description,
+  url: Astro.url.origin,
+  potentialAction: {
+    "@type": "JoinAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${Astro.url.origin}/signin`,
+      description: "Join the 12 in 12 challenge",
+    },
+  },
+  about: {
+    "@type": "Thing",
+    name: "12 Products in 12 Months Challenge",
+    description:
+      "A community challenge to build and ship one product every month for a year",
+  },
+  ...(latestProjects?.length && {
+    hasPart: {
+      "@type": "ItemList",
+      itemListElement: latestProjects.map((project, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "SoftwareApplication",
+          name: project.title,
+          description: project.description,
+          author: {
+            "@type": "Person",
+            name: project.profiles.full_name || project.profiles.username,
+            url: `${Astro.url.origin}/${project.profiles.username}`,
+          },
+        },
+      })),
+    },
+  }),
+};
 ---
 
-<Layout>
+<Layout title={title}>
+  <head slot="head">
+    <!-- Primary Meta Tags -->
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={Astro.url.origin} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta
+      property="og:image"
+      content={`${Astro.url.origin}/images/og-home.png`}
+    />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={Astro.url.origin} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta
+      property="twitter:image"
+      content={`${Astro.url.origin}/images/og-home.png`}
+    />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href={Astro.url.origin} />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+
   <Navbar />
   <main>
     <Hero />

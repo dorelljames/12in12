@@ -73,6 +73,49 @@ const stats = {
   notStarted: projects?.filter((p) => p.status === "not_started").length || 0,
 };
 
+// Prepare SEO metadata
+const title = status
+  ? `${status
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")} Projects - 12 in 12`
+  : month
+    ? `${month} Projects - 12 in 12`
+    : "All Builder Projects - 12 in 12";
+
+const description = status
+  ? `Discover ${stats[status.replace("_", "") + "ed"] || stats[status.replace("_", "")]} ${status
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")} projects built by our community of makers.`
+  : month
+    ? `Explore projects being built by our community in ${month}. Join us in building 12 products in 12 months!`
+    : `Discover ${stats.total} projects built by our community of makers. From completed products to work in progress, see what everyone is building.`;
+
+// Prepare JSON-LD structured data
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: title,
+  description: description,
+  url: Astro.url,
+  numberOfItems: stats.total,
+  itemListElement: projects?.map((project, index) => ({
+    "@type": "SoftwareApplication",
+    position: index + 1,
+    name: project.title,
+    description: project.description,
+    applicationCategory: project.tech_stack?.join(", "),
+    author: {
+      "@type": "Person",
+      name: project.profiles.full_name || project.profiles.username,
+      url: `${Astro.url.origin}/${project.profiles.username}`,
+    },
+    ...(project.demo_url && { url: project.demo_url }),
+    ...(project.github_url && { codeRepository: project.github_url }),
+  })),
+};
+
 const getStatusConfig = (status: string = "not_started") => {
   const configs = {
     completed: {
@@ -98,7 +141,42 @@ const getStatusConfig = (status: string = "not_started") => {
 };
 ---
 
-<Layout title="All Projects - 12 in 12">
+<Layout title={title}>
+  <head slot="head">
+    <!-- Primary Meta Tags -->
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={Astro.url} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta
+      property="og:image"
+      content={`${Astro.url.origin}/images/og-projects.png`}
+    />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={Astro.url} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta
+      property="twitter:image"
+      content={`${Astro.url.origin}/images/og-projects.png`}
+    />
+
+    <!-- Canonical URL -->
+    <link
+      rel="canonical"
+      href={new URL("/projects", Astro.url.origin).toString()}
+    />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+
   <Navbar />
 
   <main class="bg-slate-50 pt-24 pb-16 mb-16">
