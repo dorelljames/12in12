@@ -18,6 +18,9 @@ const supabase = createClient(
 
 // Get current month
 const currentMonth = new Date().toLocaleString("default", { month: "long" });
+const lastMonth = new Date(
+  new Date().setMonth(new Date().getMonth() - 1)
+).toLocaleString("default", { month: "long" });
 
 // Fetch latest projects for current month
 const { data: latestProjects } = await supabase
@@ -132,8 +135,15 @@ const jsonLd = {
             Building This Month
           </h2>
           <p class="text-lg text-slate-300">
-            Check out what our builders are working on in {currentMonth}
+            Check out what our builders are working on in {currentMonth} or last
+            month's projects in <a
+              href={`/projects?month=${lastMonth}`}
+              class="text-primary-400 hover:text-primary-500"
+            >
+              {lastMonth}.
+            </a>
           </p>
+          <p class="text-slate-300"></p>
         </div>
 
         <div
