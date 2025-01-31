@@ -69,7 +69,11 @@ export const PUT: APIRoute = async ({ request, cookies, params }) => {
         .eq("id", productId)
         .single();
 
-      if (productError || !product || product.profile_id !== profileId) {
+      if (
+        productError ||
+        !product ||
+        Number(product.profile_id) !== Number(profileId)
+      ) {
         return new Response(
           JSON.stringify({ error: "Invalid product selected" }),
           { status: 400 }

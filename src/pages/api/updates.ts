@@ -59,6 +59,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         .select("profile_id")
         .eq("id", productId)
         .single();
+      console.log("🚀 ~ constPOST:APIRoute= ~ productError:", productError);
+      console.log("🚀 ~ constPOST:APIRoute= ~ product:", product);
 
       if (
         productError ||
