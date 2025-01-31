@@ -184,7 +184,7 @@ interface SocialLink {
 const { data: socialLinks, error: socialLinksError } = await supabase
   .from("social_links")
   .select("*")
-  .eq("user_id", profile?.id)
+  .eq("user_id", profile?.user_id)
   .order("platform");
 
 // Add this before the Layout component
@@ -215,66 +215,123 @@ let editingUpdate: Update | undefined;
                 </p>
 
                 {/* Social Links */}
-                <div class="flex items-center gap-4 text-gray-400">
+                <div class="flex flex-wrap items-center gap-3 mt-6">
                   {
-                    socialLinks?.map((link: SocialLink) => {
-                      type IconsType = {
-                        [K in SocialLink["platform"]]: astroHTML.JSX.Element;
-                      };
+                    socialLinks && socialLinks.length > 0 ? (
+                      socialLinks.map((link: SocialLink) => {
+                        type IconsType = {
+                          [K in SocialLink["platform"]]: {
+                            icon: astroHTML.JSX.Element;
+                            label: string;
+                            color: string;
+                          };
+                        };
 
-                      const icons: IconsType = {
-                        website: (
-                          <svg
-                            class="w-5 h-5"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
+                        const icons: IconsType = {
+                          website: {
+                            icon: (
+                              <svg
+                                class="w-4 h-4"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="2" y1="12" x2="22" y2="12" />
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                              </svg>
+                            ),
+                            label: "Website",
+                            color: "from-blue-600 to-blue-400",
+                          },
+                          github: {
+                            icon: (
+                              <svg
+                                class="w-4 h-4"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                              >
+                                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                              </svg>
+                            ),
+                            label: "GitHub",
+                            color: "from-gray-600 to-gray-400",
+                          },
+                          twitter: {
+                            icon: (
+                              <svg
+                                class="w-4 h-4"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                              >
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                              </svg>
+                            ),
+                            label: "Twitter",
+                            color: "from-sky-600 to-sky-400",
+                          },
+                          custom: {
+                            icon: (
+                              <svg
+                                class="w-4 h-4"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                              >
+                                <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            ),
+                            label: link.title || "Link",
+                            color: "from-purple-600 to-purple-400",
+                          },
+                        };
+
+                        const { icon, label, color } = icons[link.platform];
+
+                        return (
+                          <a
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class={`inline-flex items-center gap-2 px-3 py-1.5 text-sm text-white rounded-full transition-all duration-300 bg-gradient-to-r ${color} hover:scale-105 hover:shadow-lg hover:shadow-${color.split("-")[1]}-600/20`}
+                            title={link.title || link.platform}
                           >
-                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm1 16.057v-3.05c2.837.183 4.704 1.179 5.904 2.317-1.297 1.291-3.569 2.14-5.904 2.317v3.05A9.09 9.09 0 0112 16.92a9.09 9.09 0 01-1-6.863A9.09 9.09 0 0112 3.196a9.09 9.09 0 011 6.863A9.09 9.09 0 0112 16.92z" />
-                          </svg>
-                        ),
-                        github: (
+                            {icon}
+                            <span>{label}</span>
+                          </a>
+                        );
+                      })
+                    ) : isOwned ? (
+                      <div class="flex items-center gap-2 text-sm">
+                        <a
+                          href="/profile"
+                          class="inline-flex items-center gap-2 px-3 py-1.5 text-gray-400 hover:text-gray-300 bg-gray-800/50 hover:bg-gray-800 rounded-full transition-all border border-gray-700/50"
+                        >
                           <svg
-                            class="w-5 h-5"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-                          </svg>
-                        ),
-                        twitter: (
-                          <svg
-                            class="w-5 h-5"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                          </svg>
-                        ),
-                        custom: (
-                          <svg
-                            class="w-5 h-5"
+                            class="w-4 h-4"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
                             stroke-width="2"
                           >
-                            <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
+                            />
                           </svg>
-                        ),
-                      };
-
-                      return (
-                        <a
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="hover:text-gray-200 transition-colors"
-                          title={link.title || link.platform}
-                        >
-                          {icons[link.platform]}
+                          <span>Add your social links</span>
                         </a>
-                      );
-                    })
+                        <span class="text-gray-600">•</span>
+                        <span class="text-gray-500">
+                          Let others connect with you
+                        </span>
+                      </div>
+                    ) : null
                   }
                 </div>
               </div>
@@ -413,84 +470,133 @@ let editingUpdate: Update | undefined;
           {/* Updates List */}
           <div class="space-y-4">
             {
-              updates?.map((update: Update) => (
-                <div class="bg-gray-800 rounded-lg border border-gray-700 p-4 hover:shadow-lg transition-shadow">
-                  <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center gap-2">
-                      <span
-                        class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        ${
-                          update.type === "milestone"
-                            ? "bg-purple-900/50 text-purple-200 border border-purple-700/50"
-                            : update.type === "progress"
-                              ? "bg-blue-900/50 text-blue-200 border border-blue-700/50"
-                              : update.type === "launch"
-                                ? "bg-emerald-900/50 text-emerald-200 border border-emerald-700/50"
-                                : "bg-amber-900/50 text-amber-200 border border-amber-700/50"
-                        }`}
-                      >
-                        {update.type === "milestone"
-                          ? "🏆"
-                          : update.type === "progress"
-                            ? "📈"
-                            : update.type === "launch"
-                              ? "🚀"
-                              : "💡"}{" "}
-                        {update.type.charAt(0).toUpperCase() +
-                          update.type.slice(1)}
-                      </span>
-                      {update.product_id && (
-                        <>
-                          <span class="text-gray-600">•</span>
-                          <span class="text-sm text-gray-300">
-                            {update.products?.title}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    <div class="flex items-center gap-3">
-                      <time class="text-sm text-gray-400">
-                        {new Date(update.created_at).toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "short",
-                            day: "numeric",
-                          }
-                        )}
-                      </time>
-                      {isOwned && (
-                        <button
-                          type="button"
-                          class="text-gray-500 hover:text-gray-300"
-                          onclick={`window.showEditModal(${JSON.stringify({
-                            id: update.id,
-                            type: update.type,
-                            content: update.content,
-                            product_id: update.product_id,
-                          })})`}
+              updates && updates.length > 0 ? (
+                updates.map((update: Update) => (
+                  <div class="bg-gray-800 rounded-lg border border-gray-700 p-4 hover:shadow-lg transition-shadow">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-2">
+                        <span
+                          class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                          ${
+                            update.type === "milestone"
+                              ? "bg-purple-900/50 text-purple-200 border border-purple-700/50"
+                              : update.type === "progress"
+                                ? "bg-blue-900/50 text-blue-200 border border-blue-700/50"
+                                : update.type === "launch"
+                                  ? "bg-emerald-900/50 text-emerald-200 border border-emerald-700/50"
+                                  : "bg-amber-900/50 text-amber-200 border border-amber-700/50"
+                          }`}
                         >
-                          <svg
-                            class="w-4 h-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                          {update.type === "milestone"
+                            ? "🏆"
+                            : update.type === "progress"
+                              ? "📈"
+                              : update.type === "launch"
+                                ? "🚀"
+                                : "💡"}{" "}
+                          {update.type.charAt(0).toUpperCase() +
+                            update.type.slice(1)}
+                        </span>
+                        {update.product_id && (
+                          <>
+                            <span class="text-gray-600">•</span>
+                            <span class="text-sm text-gray-300">
+                              {update.products?.title}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      <div class="flex items-center gap-3">
+                        <time class="text-sm text-gray-400">
+                          {new Date(update.created_at).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
+                        </time>
+                        {isOwned && (
+                          <button
+                            type="button"
+                            class="text-gray-500 hover:text-gray-300"
+                            onclick={`window.showEditModal(${JSON.stringify({
+                              id: update.id,
+                              type: update.type,
+                              content: update.content,
+                              product_id: update.product_id,
+                            })})`}
                           >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                            />
-                          </svg>
-                        </button>
-                      )}
+                            <svg
+                              class="w-4 h-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
                     </div>
+                    <p class="text-gray-300 text-sm whitespace-pre-wrap">
+                      {update.content}
+                    </p>
                   </div>
-                  <p class="text-gray-300 text-sm whitespace-pre-wrap">
-                    {update.content}
+                ))
+              ) : (
+                <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700/50 text-center">
+                  <div class="mx-auto w-16 h-16 mb-4 rounded-full bg-gray-700/50 flex items-center justify-center">
+                    <svg
+                      class="w-8 h-8 text-gray-500"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 class="text-lg font-medium text-gray-300 mb-2">
+                    No Updates Yet
+                  </h3>
+                  <p class="text-gray-400 max-w-sm mx-auto">
+                    {isOwned
+                      ? "Share your progress, milestones, and learnings with the community. Click the 'Share Update' button to get started!"
+                      : `${profile?.full_name || username} hasn't shared any updates yet. Check back later!`}
                   </p>
+                  {isOwned && (
+                    <button
+                      id="shareUpdateButton2"
+                      class="mt-6 inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                    >
+                      <svg
+                        class="w-4 h-4 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      Share Your First Update
+                    </button>
+                  )}
                 </div>
-              ))
+              )
             }
           </div>
 
