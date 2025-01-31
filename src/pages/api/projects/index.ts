@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { supabase } from "../../../lib/supabase";
+import { generateSlug, makeSlugUnique } from "../../../lib/utils";
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
@@ -78,6 +79,21 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       );
     }
 
+    // Generate base slug from title
+    const baseSlug = generateSlug(title);
+
+    // Get all existing slugs that start with the base slug
+    const { data: existingSlugs } = await supabase
+      .from("products")
+      .select("slug")
+      .like("slug", `${baseSlug}%`);
+
+    // Generate unique slug
+    const slug = makeSlugUnique(
+      baseSlug,
+      existingSlugs?.map((p) => p.slug) || []
+    );
+
     // Insert the project
     const { data, error } = await supabase
       .from("products")
@@ -93,6 +109,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
           tech_stack: Array.isArray(tech_stack) ? tech_stack : [],
           lessons_learned: lessons_learned || null,
           thumbnail_url: thumbnail_url || null,
+          slug,
         },
       ])
       .select()

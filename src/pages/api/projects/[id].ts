@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { supabase } from "../../../lib/supabase";
+import { generateSlug, makeSlugUnique } from "../../../lib/utils";
 
 export const PUT: APIRoute = async ({ request, cookies, params }) => {
   try {
@@ -36,8 +37,6 @@ export const PUT: APIRoute = async ({ request, cookies, params }) => {
       title,
       description,
       status,
-      month,
-      profileId,
       github_url,
       demo_url,
       tech_stack,
@@ -48,7 +47,7 @@ export const PUT: APIRoute = async ({ request, cookies, params }) => {
     // Get the project to verify ownership
     const { data: project, error: projectError } = await supabase
       .from("products")
-      .select("profile_id")
+      .select("profile_id, title")
       .eq("id", id)
       .single();
 
@@ -62,7 +61,7 @@ export const PUT: APIRoute = async ({ request, cookies, params }) => {
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("user_id")
-      .eq("id", profileId)
+      .eq("id", project.profile_id)
       .single();
 
     if (profileError || !profile) {
@@ -78,22 +77,21 @@ export const PUT: APIRoute = async ({ request, cookies, params }) => {
       });
     }
 
-    // Check if a project already exists for this month (excluding current project)
-    const { data: existingProject } = await supabase
-      .from("products")
-      .select("id")
-      .eq("profile_id", profileId)
-      .eq("month", month)
-      .neq("id", id)
-      .single();
+    // Only update slug if title has changed
+    let slug = undefined;
+    if (title && title !== project.title) {
+      // Generate base slug from new title
+      const baseSlug = generateSlug(title);
 
-    if (existingProject) {
-      return new Response(
-        JSON.stringify({
-          error: "Another project already exists for this month",
-        }),
-        { status: 400 }
-      );
+      // Get all existing slugs that start with the base slug, excluding current project
+      const { data: existingSlugs } = await supabase
+        .from("products")
+        .select("slug")
+        .like("slug", `${baseSlug}%`)
+        .neq("id", id);
+
+      // Generate unique slug
+      slug = makeSlugUnique(baseSlug, existingSlugs?.map((p) => p.slug) || []);
     }
 
     // Update the project
@@ -103,12 +101,12 @@ export const PUT: APIRoute = async ({ request, cookies, params }) => {
         title,
         description,
         status,
-        month,
         github_url: github_url || null,
         demo_url: demo_url || null,
         tech_stack: Array.isArray(tech_stack) ? tech_stack : [],
         lessons_learned: lessons_learned || null,
         thumbnail_url: thumbnail_url || null,
+        ...(slug && { slug }), // Only include slug if it was updated
       })
       .eq("id", id)
       .select()

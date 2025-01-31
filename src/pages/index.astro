@@ -46,13 +46,13 @@ const { data: latestProjects } = await supabase
     <Benefits />
 
     {/* Latest Projects Section */}
-    <section class="py-24 bg-slate-50/50">
+    <section class="py-24 bg-slate-900">
       <div class="container mx-auto px-4">
         <div class="max-w-3xl mx-auto text-center mb-16">
-          <h2 class="text-4xl font-bold text-slate-900 mb-4">
+          <h2 class="text-4xl font-bold text-slate-100 mb-4">
             Building This Month
           </h2>
-          <p class="text-lg text-slate-600">
+          <p class="text-lg text-slate-300">
             Check out what our builders are working on in {currentMonth}
           </p>
         </div>
@@ -62,9 +62,9 @@ const { data: latestProjects } = await supabase
         >
           {
             latestProjects?.map((project) => (
-              <div class="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-200 overflow-hidden group hover:border-primary-100">
+              <div class="bg-slate-800/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-700/50 overflow-hidden group hover:border-primary-500/30">
                 {/* Project Thumbnail */}
-                <div class="relative h-48 bg-slate-100">
+                <div class="relative h-48 bg-slate-800">
                   {project.thumbnail_url ? (
                     <img
                       src={project.thumbnail_url}
@@ -72,12 +72,12 @@ const { data: latestProjects } = await supabase
                       class="w-full h-full object-cover"
                     />
                   ) : (
-                    <div class="flex items-center justify-center h-full">
-                      <span class="text-slate-400">🏗️ Building</span>
+                    <div class="flex items-center justify-center h-full bg-gradient-to-br from-slate-800 to-slate-900">
+                      <span class="text-slate-500">🏗️ Building</span>
                     </div>
                   )}
                   <div class="absolute top-4 right-4">
-                    <span class="px-3 py-1.5 bg-primary-50 text-primary-700 rounded-full text-xs font-medium border border-primary-100">
+                    <span class="px-3 py-1.5 bg-primary-900/50 text-primary-300 rounded-full text-xs font-medium border border-primary-700/50">
                       In Progress
                     </span>
                   </div>
@@ -90,23 +90,23 @@ const { data: latestProjects } = await supabase
                       <img
                         src={project.profiles.avatar_url}
                         alt={project.profiles.username}
-                        class="w-10 h-10 rounded-full ring-2 ring-slate-100"
+                        class="w-10 h-10 rounded-full ring-2 ring-slate-700"
                       />
                     ) : (
-                      <div class="w-10 h-10 rounded-full bg-primary-50 text-primary-700 flex items-center justify-center ring-2 ring-primary-100">
+                      <div class="w-10 h-10 rounded-full bg-primary-900/50 text-primary-300 flex items-center justify-center ring-2 ring-primary-700/50">
                         <span class="text-sm font-medium">
                           {project.profiles.username?.[0]?.toUpperCase()}
                         </span>
                       </div>
                     )}
                     <div>
-                      <h4 class="text-sm font-medium text-slate-900">
+                      <h4 class="text-sm font-medium text-slate-200">
                         {project.profiles.full_name ||
                           project.profiles.username}
                       </h4>
                       <a
                         href={`/${project.profiles.username}`}
-                        class="text-xs text-slate-500 hover:text-primary-600"
+                        class="text-xs text-slate-400 hover:text-primary-400"
                       >
                         @{project.profiles.username}
                       </a>
@@ -116,12 +116,12 @@ const { data: latestProjects } = await supabase
                   {/* Project Info */}
                   <a
                     href={`/projects/${project.slug}`}
-                    class="text-xl font-semibold text-slate-900 mb-2 group-hover:text-primary-600 transition-colors block"
+                    class="text-xl font-semibold text-slate-100 mb-2 group-hover:text-primary-400 transition-colors block"
                   >
                     {project.title}
                   </a>
                   {project.description && (
-                    <p class="text-slate-600 text-sm mb-4 line-clamp-2">
+                    <p class="text-slate-300 text-sm mb-4 line-clamp-2">
                       {project.description}
                     </p>
                   )}
@@ -130,7 +130,7 @@ const { data: latestProjects } = await supabase
                   {project.tech_stack && (
                     <div class="flex flex-wrap gap-2">
                       {project.tech_stack.map((tech: string) => (
-                        <span class="px-2.5 py-1 bg-slate-50 text-slate-700 rounded-lg text-xs border border-slate-200">
+                        <span class="px-2.5 py-1 bg-slate-700/50 text-slate-300 rounded-lg text-xs border border-slate-600">
                           {tech}
                         </span>
                       ))}
@@ -145,12 +145,12 @@ const { data: latestProjects } = await supabase
         {/* Show this when no projects */}
         {
           (!latestProjects || latestProjects.length === 0) && (
-            <div class="text-center py-12 bg-white rounded-2xl border border-slate-200">
+            <div class="text-center py-12 bg-slate-800/50 rounded-2xl border border-slate-700">
               <div class="text-4xl mb-4">🌱</div>
-              <h3 class="text-lg font-medium text-slate-900 mb-2">
+              <h3 class="text-lg font-medium text-slate-200 mb-2">
                 No Active Projects Yet
               </h3>
-              <p class="text-slate-600">
+              <p class="text-slate-300">
                 Be the first to start building this month!
               </p>
             </div>
@@ -161,7 +161,7 @@ const { data: latestProjects } = await supabase
         <div class="text-center mt-12">
           <a
             href="/projects"
-            class="inline-flex items-center gap-2 px-8 py-3 text-base font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all duration-300 shadow-sm hover:shadow-primary-100/50 hover:shadow-lg"
+            class="inline-flex items-center gap-2 px-8 py-3 text-base font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-primary-900/50"
           >
             View All Projects
             <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">

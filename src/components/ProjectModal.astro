@@ -22,19 +22,19 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
 
 <div
   id="projectModal"
-  class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+  class="hidden fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-50"
 >
   <div
-    class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white"
+    class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-xl bg-gray-800 border-gray-700"
   >
     <div class="mt-3">
       <div class="flex justify-between items-center pb-3">
-        <h3 class="text-lg leading-6 font-medium text-gray-900">
+        <h3 class="text-lg leading-6 font-medium text-white">
           {modalTitle} - {month}
         </h3>
         <button
           id="closeProjectModal"
-          class="text-gray-400 hover:text-gray-500"
+          class="text-gray-400 hover:text-gray-200 transition-colors"
         >
           <svg
             class="h-6 w-6"
@@ -57,38 +57,38 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
 
         <div class="grid grid-cols-1 gap-6">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-200 mb-2">
               Project Title
             </label>
             <input
               type="text"
               name="title"
               value={project?.title}
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+              class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
               required
             />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-200 mb-2">
               Description
             </label>
             <textarea
               name="description"
               rows="3"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+              class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
               placeholder="What are you building?"
               required>{project?.description}</textarea
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-200 mb-2">
               Status
             </label>
             <select
               name="status"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+              class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
               required
             >
               <option
@@ -108,69 +108,129 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
+              <label class="block text-sm font-medium text-gray-200 mb-2">
                 GitHub URL
               </label>
               <input
                 type="url"
                 name="github_url"
                 value={project?.github_url}
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
                 placeholder="https://github.com/..."
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
+              <label class="block text-sm font-medium text-gray-200 mb-2">
                 Demo URL
               </label>
               <input
                 type="url"
                 name="demo_url"
                 value={project?.demo_url}
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
                 placeholder="https://..."
               />
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-200 mb-2">
               Tech Stack (comma-separated)
             </label>
             <input
               type="text"
               name="tech_stack"
               value={project?.tech_stack?.join(", ")}
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+              class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
               placeholder="React, TypeScript, Tailwind CSS"
             />
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
+            <label class="block text-sm font-medium text-gray-200 mb-2">
               Lessons Learned
             </label>
             <textarea
               name="lessons_learned"
               rows="3"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+              class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
               placeholder="What did you learn from this project?"
               >{project?.lessons_learned}</textarea
             >
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Thumbnail URL
+            <label class="block text-sm font-medium text-gray-200 mb-2">
+              Project Thumbnail
             </label>
-            <input
-              type="url"
-              name="thumbnail_url"
-              value={project?.thumbnail_url}
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-              placeholder="https://..."
-            />
+            <div class="space-y-4">
+              {
+                project?.thumbnail_url && (
+                  <div class="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-900">
+                    <img
+                      src={project.thumbnail_url}
+                      alt="Project thumbnail"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                )
+              }
+              <div class="flex items-center gap-4">
+                <div class="flex-1">
+                  <input
+                    type="url"
+                    name="thumbnail_url"
+                    value={project?.thumbnail_url}
+                    class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+                    placeholder="https://..."
+                  />
+                </div>
+                <span class="text-gray-400">or</span>
+                <div class="flex-shrink-0">
+                  <label
+                    class="group relative flex items-center justify-center w-32 h-10 rounded-lg border-2 border-dashed border-gray-700 hover:border-emerald-500/50 transition-colors cursor-pointer bg-gray-900/50"
+                  >
+                    <input
+                      type="file"
+                      id="thumbnailUpload"
+                      accept="image/*"
+                      class="sr-only"
+                    />
+                    <div class="flex items-center gap-2">
+                      <span
+                        id="uploadText"
+                        class="text-sm text-gray-400 group-hover:text-emerald-400 transition-colors"
+                        >Upload Image</span
+                      >
+                      <svg
+                        id="uploadSpinner"
+                        class="hidden w-4 h-4 animate-spin text-emerald-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              <p class="text-xs text-gray-400">
+                Supported formats: JPG, PNG, GIF (max 10MB)
+              </p>
+            </div>
           </div>
         </div>
 
@@ -178,13 +238,13 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
           <button
             type="button"
             id="cancelProjectButton"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+            class="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-900 border border-gray-700 rounded-lg hover:bg-gray-800 hover:text-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-emerald-500/50"
           >
             Cancel
           </button>
           <button
             type="submit"
-            class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+            class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-lg hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-emerald-500"
           >
             {submitButtonText}
           </button>
@@ -330,6 +390,103 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
       } else {
         alert("An unexpected error occurred");
       }
+    }
+  });
+
+  // Add thumbnail upload handling
+  const thumbnailInput = document.getElementById(
+    "thumbnailUpload"
+  ) as HTMLInputElement;
+  const thumbnailUrlInput = projectForm?.querySelector(
+    '[name="thumbnail_url"]'
+  ) as HTMLInputElement;
+  const uploadText = document.getElementById("uploadText");
+  const uploadSpinner = document.getElementById("uploadSpinner");
+
+  function setUploadingState(isUploading: boolean) {
+    if (uploadText && uploadSpinner && thumbnailInput) {
+      if (isUploading) {
+        uploadText.textContent = "Uploading...";
+        uploadSpinner.classList.remove("hidden");
+        thumbnailInput.disabled = true;
+      } else {
+        uploadText.textContent = "Upload Image";
+        uploadSpinner.classList.add("hidden");
+        thumbnailInput.disabled = false;
+      }
+    }
+  }
+
+  thumbnailInput?.addEventListener("change", async (e) => {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+
+    if (!file) return;
+
+    // Check file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File size must be less than 10MB");
+      target.value = "";
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      alert("File must be an image");
+      target.value = "";
+      return;
+    }
+
+    try {
+      setUploadingState(true);
+      const formData = new FormData();
+      formData.append("thumbnail", file);
+
+      // If we're editing a project, include the project ID
+      const projectIdInput = projectForm?.querySelector(
+        '[name="id"]'
+      ) as HTMLInputElement;
+      if (projectIdInput?.value) {
+        formData.append("projectId", projectIdInput.value);
+      }
+
+      const response = await fetch("/api/projects/upload-thumbnail", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to upload image");
+      }
+
+      const { data } = await response.json();
+      if (thumbnailUrlInput) {
+        thumbnailUrlInput.value = data.thumbnail_url;
+      }
+
+      // If we're editing a project, update the preview
+      const previewContainer =
+        thumbnailUrlInput?.closest("div")?.previousElementSibling;
+      if (previewContainer && previewContainer.tagName === "DIV") {
+        const img = previewContainer.querySelector("img");
+        if (img) {
+          img.src = data.thumbnail_url;
+        } else {
+          const newImg = document.createElement("img");
+          newImg.src = data.thumbnail_url;
+          newImg.alt = "Project thumbnail";
+          newImg.className = "w-full h-full object-cover";
+          previewContainer.appendChild(newImg);
+        }
+      }
+    } catch (error) {
+      console.error("Error uploading thumbnail:", error);
+      alert(error instanceof Error ? error.message : "Failed to upload image");
+    } finally {
+      setUploadingState(false);
+      // Reset file input
+      target.value = "";
     }
   });
 
