@@ -1,0 +1,227 @@
+---
+interface Props {
+  productId: string;
+}
+
+const { productId } = Astro.props;
+---
+
+<div class="comments-section" data-product-id={productId}>
+  {/* Comment Form */}
+  <div class="mb-8">
+    <h3 class="text-xl font-semibold text-slate-200 mb-4">Leave a Comment</h3>
+    <form id="comment-form" class="space-y-4">
+      <div>
+        <textarea
+          id="comment-content"
+          name="content"
+          rows="3"
+          class="w-full rounded-lg bg-slate-800 border-slate-700 text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          placeholder="Share your thoughts..."></textarea>
+      </div>
+      <div class="flex justify-end">
+        <button
+          type="submit"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          disabled
+        >
+          Post Comment
+        </button>
+      </div>
+    </form>
+  </div>
+
+  {/* Comments List */}
+  <div>
+    <h3 class="text-xl font-semibold text-slate-200 mb-4">Comments</h3>
+    <div id="comments-list" class="space-y-6">
+      <div class="animate-pulse space-y-6">
+        <div class="flex gap-4">
+          <div class="w-10 h-10 bg-slate-700 rounded-full"></div>
+          <div class="flex-1 space-y-2">
+            <div class="h-4 bg-slate-700 rounded w-1/4"></div>
+            <div class="h-4 bg-slate-700 rounded w-3/4"></div>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="w-10 h-10 bg-slate-700 rounded-full"></div>
+          <div class="flex-1 space-y-2">
+            <div class="h-4 bg-slate-700 rounded w-1/4"></div>
+            <div class="h-4 bg-slate-700 rounded w-3/4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let isAuthenticated = false;
+
+  // Check authentication status
+  const checkAuth = async () => {
+    try {
+      const response = await fetch("/api/auth/check", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      isAuthenticated = response.ok;
+      return response.ok;
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+      return false;
+    }
+  };
+
+  // Format date
+  const formatDate = (date: string) => {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date(date));
+  };
+
+  // Render a single comment
+  const renderComment = (comment: any) => {
+    const commentEl = document.createElement("div");
+    commentEl.className =
+      "flex gap-4 p-4 rounded-lg bg-slate-800/50 border border-slate-700/50";
+    commentEl.innerHTML = `
+      <div class="flex-shrink-0">
+        ${
+          comment.profiles.avatar_url
+            ? `<img src="${comment.profiles.avatar_url}" alt="${
+                comment.profiles.username
+              }" class="w-10 h-10 rounded-full ring-2 ring-slate-700">`
+            : `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-900 to-primary-800 flex items-center justify-center ring-2 ring-slate-700">
+                <span class="text-primary-200 text-sm">${comment.profiles.username[0].toUpperCase()}</span>
+              </div>`
+        }
+      </div>
+      <div class="flex-1 space-y-2">
+        <div class="flex items-center justify-between">
+          <div>
+            <h4 class="text-sm font-medium text-slate-200">
+              ${comment.profiles.full_name || comment.profiles.username}
+            </h4>
+            <p class="text-xs text-slate-400">@${comment.profiles.username}</p>
+          </div>
+          <span class="text-xs text-slate-500">${formatDate(comment.created_at)}</span>
+        </div>
+        <p class="text-slate-300 text-sm whitespace-pre-wrap">${comment.content}</p>
+      </div>
+    `;
+    return commentEl;
+  };
+
+  // Fetch and render comments
+  const fetchComments = async (productId: string) => {
+    try {
+      const response = await fetch(`/api/comments?productId=${productId}`);
+      const comments = await response.json();
+
+      const commentsList = document.getElementById("comments-list");
+      if (commentsList) {
+        commentsList.innerHTML = "";
+        if (comments.length === 0) {
+          commentsList.innerHTML = `
+            <div class="text-center py-8">
+              <p class="text-slate-400">No comments yet. Be the first to comment!</p>
+            </div>
+          `;
+        } else {
+          comments.forEach((comment: any) => {
+            commentsList.appendChild(renderComment(comment));
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  };
+
+  // Initialize comments section
+  const init = async () => {
+    const commentsSection = document.querySelector(".comments-section");
+    if (!commentsSection) return;
+
+    const productId = commentsSection.getAttribute("data-product-id");
+    if (!productId) return;
+
+    // Check auth status and update UI
+    const isAuthed = await checkAuth();
+    const commentForm = document.getElementById("comment-form");
+    const submitButton = commentForm?.querySelector(
+      "button[type='submit']"
+    ) as HTMLButtonElement | null;
+    const textarea = document.getElementById(
+      "comment-content"
+    ) as HTMLTextAreaElement;
+
+    if (isAuthed && submitButton && textarea) {
+      submitButton.disabled = false;
+      textarea.placeholder = "Share your thoughts...";
+    } else if (submitButton && textarea) {
+      submitButton.disabled = true;
+      textarea.placeholder = "Please sign in to comment";
+    }
+
+    // Fetch initial comments
+    await fetchComments(productId);
+
+    // Handle form submission
+    if (commentForm) {
+      commentForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!isAuthed) return;
+
+        const submitButton = commentForm.querySelector(
+          "button[type='submit']"
+        ) as HTMLButtonElement;
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.textContent = "Posting...";
+        }
+
+        const formData = new FormData(e.target as HTMLFormElement);
+        const content = formData.get("content");
+
+        try {
+          const response = await fetch("/api/comments", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              productId,
+              content,
+            }),
+          });
+
+          if (response.ok) {
+            // Clear form and refresh comments
+            (e.target as HTMLFormElement).reset();
+            await fetchComments(productId);
+          } else {
+            console.error("Error posting comment:", await response.json());
+          }
+        } catch (error) {
+          console.error("Error posting comment:", error);
+        } finally {
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = "Post Comment";
+          }
+        }
+      });
+    }
+  };
+
+  // Initialize when the DOM is ready
+  document.addEventListener("DOMContentLoaded", init);
+</script>

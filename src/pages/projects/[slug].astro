@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import Navbar from "../../components/Navbar.astro";
 import Footer from "../../components/Footer.astro";
+import Comments from "../../components/Comments.astro";
 import { createClient } from "@supabase/supabase-js";
 
 // Initialize Supabase client
@@ -360,7 +361,7 @@ const jsonLd = {
                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                       />
                     </svg>
-                    View Live Demo
+                    View Project Demo
                   </a>
                 )}
               </div>
@@ -419,6 +420,12 @@ const jsonLd = {
           </div>
         )
       }
+
+      {/* Comments Section */}
+      <div class="max-w-4xl mx-auto mt-16">
+        <h2 class="text-2xl font-bold text-slate-100 mb-6">Comments</h2>
+        <Comments productId={project.id} />
+      </div>
 
       {/* Lessons Learned - Only show for completed projects */}
       {
