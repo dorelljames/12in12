@@ -12,28 +12,22 @@ const supabase = createClient(
 
 // Get project slug from URL params
 const { slug } = Astro.params;
+console.log("🚀 ~ slug:", slug);
 
 // Fetch project details
 const { data: project } = await supabase
   .from("products")
+  // .select("*")
   .select(
     `
-    *,
-    profiles:profile_id (
-      username,
-      full_name,
-      avatar_url,
-      bio
-    ),
-    product_updates (
-      *
-    ),
-    order: {
-      product_updates: {
-        created_at: 'desc'
-      }
-    }
-  `
+      *,
+      profiles:profile_id (
+        username,
+        full_name,
+        avatar_url,
+        bio
+      )
+    `
   )
   .eq("slug", slug)
   .single();
