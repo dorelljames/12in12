@@ -12,7 +12,6 @@ const supabase = createClient(
 
 // Get project slug from URL params
 const { slug } = Astro.params;
-console.log("🚀 ~ slug:", slug);
 
 // Fetch project details
 const { data: project } = await supabase
@@ -75,7 +74,7 @@ const formatDate = (date: string) => {
 <Layout title={`${project.title} - 12 in 12`}>
   <Navbar />
 
-  <main class="bg-slate-900 pt-24 pb-16 min-h-screen">
+  <main class="bg-slate-900 pt-24 pb-16">
     <div class="container mx-auto px-4">
       {/* Back Link */}
       <div class="max-w-4xl mx-auto mb-8">
