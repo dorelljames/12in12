@@ -1,0 +1,704 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import { supabase } from "../lib/supabase";
+
+// Get auth tokens from cookies
+const accessToken = Astro.cookies.get("sb-access-token")?.value;
+const refreshToken = Astro.cookies.get("sb-refresh-token")?.value;
+
+// Initialize user and profile as null
+let user = null;
+let profile = null;
+
+if (accessToken && refreshToken) {
+  const {
+    data: { user: sessionUser },
+  } = await supabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  });
+
+  if (sessionUser) {
+    user = sessionUser;
+    // Fetch user's profile
+    const { data: userProfile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    profile = userProfile;
+  }
+}
+
+// Redirect to signin if not authenticated
+if (!user) {
+  return Astro.redirect("/signin");
+}
+
+// Get query parameters for messages
+const searchParams = Astro.url.searchParams;
+const success = searchParams.get("success");
+const error = searchParams.get("error");
+
+// Get social links
+const { data: socialLinks } = await supabase
+  .from("social_links")
+  .select("*")
+  .eq("user_id", user.id)
+  .order("platform");
+---
+
+<Layout title="Profile Settings">
+  <Navbar />
+
+  <main class="bg-slate-900 pt-24 pb-16">
+    <div class="relative">
+      <div class="absolute inset-0 bg-grid-slate-800/[0.1] bg-[size:40px_40px]">
+      </div>
+      <div
+        class="absolute inset-0 bg-gradient-to-b from-slate-900/50 to-slate-900"
+      >
+      </div>
+
+      <div class="relative mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16 animate-fade-in">
+          <span class="text-primary-400 font-medium">Profile Settings</span>
+          <h1
+            class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          >
+            Customize Your Profile
+          </h1>
+          <p class="mt-4 text-lg text-slate-300">
+            Update your profile information and manage your social links.
+          </p>
+        </div>
+
+        {
+          success && (
+            <div class="mb-6 p-4 rounded-md bg-green-50 border border-green-200 text-green-800">
+              <p>Profile updated successfully!</p>
+            </div>
+          )
+        }
+
+        {
+          error && (
+            <div class="mb-6 p-4 rounded-md bg-red-50 border border-red-200 text-red-800">
+              <p>{decodeURIComponent(error)}</p>
+            </div>
+          )
+        }
+
+        <!-- Username Section -->
+        <div class="mb-16">
+          <div class="text-center mb-8 animate-fade-in">
+            <span class="text-primary-400 font-medium"
+              >Your Builder Identity</span
+            >
+            <h1
+              class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl"
+            >
+              {
+                profile?.username
+                  ? "Your Profile URL"
+                  : "Claim Your Profile URL"
+              }
+            </h1>
+            <p class="mt-4 text-lg text-slate-300">
+              {
+                profile?.username
+                  ? "This is your unique profile URL where others can find your projects."
+                  : "Create your unique profile URL to showcase your builder journey."
+              }
+            </p>
+          </div>
+
+          <form
+            id="username-form"
+            class="space-y-8 animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50"
+          >
+            <div>
+              <label
+                for="username"
+                class="block text-sm font-medium text-slate-300"
+              >
+                Choose Your Username
+              </label>
+              <div class="mt-2">
+                <div class="relative flex rounded-md shadow-sm">
+                  <span
+                    class="inline-flex items-center px-3 rounded-l-md border-r border-slate-600 bg-slate-700 text-slate-400 text-sm"
+                  >
+                    12in12.pro/
+                  </span>
+                  <input
+                    type="text"
+                    name="username"
+                    id="username"
+                    required
+                    value={profile?.username}
+                    class="block w-full rounded-none rounded-r-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                    placeholder="your-username"
+                  />
+                </div>
+                <p class="mt-2 text-xs text-slate-400">
+                  This will be your public profile URL. Choose wisely as
+                  changing it later might break shared links.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <button
+                type="submit"
+                class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-accent-500 hover:from-primary-700 hover:to-accent-600 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {profile?.username ? "Update Username" : "Claim Username"}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Profile Details Section -->
+        <div class="mb-16">
+          <div class="text-center mb-8 animate-fade-in">
+            <span class="text-primary-400 font-medium">Profile Details</span>
+            <h2 class="mt-2 text-2xl font-bold tracking-tight text-white">
+              Customize Your Profile
+            </h2>
+            <p class="mt-4 text-lg text-slate-300">
+              Help others know more about you and your builder journey.
+            </p>
+          </div>
+
+          <form
+            id="profile-form"
+            class="space-y-8 animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50"
+          >
+            <div class="space-y-6">
+              <!-- Profile Picture Section -->
+              <div>
+                <label
+                  for="avatar"
+                  class="block text-sm font-medium text-slate-300"
+                >
+                  Profile Picture
+                </label>
+                <div class="mt-2 flex items-center gap-4">
+                  {
+                    profile?.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt="Profile"
+                        class="h-16 w-16 rounded-full object-cover border-2 border-slate-700"
+                        id="avatar-preview"
+                      />
+                    ) : (
+                      <div class="h-16 w-16 rounded-full bg-slate-700 flex items-center justify-center border-2 border-slate-600">
+                        <span class="text-2xl text-slate-400">
+                          {profile?.username?.[0]?.toUpperCase() || "?"}
+                        </span>
+                      </div>
+                    )
+                  }
+                  <div class="flex flex-col gap-2">
+                    <label
+                      for="avatar-upload"
+                      class="cursor-pointer inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-700 hover:bg-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 mr-2"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path
+                          d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"
+                        ></path>
+                        <path d="M16 5V3"></path>
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                        <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                        <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                      </svg>
+                      Upload New Picture
+                    </label>
+                    <input
+                      type="file"
+                      id="avatar-upload"
+                      accept="image/*"
+                      class="hidden"
+                    />
+                    <p class="text-xs text-slate-400">
+                      JPG, PNG or GIF (max. 2MB)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  for="full_name"
+                  class="block text-sm font-medium text-slate-300"
+                >
+                  Full Name
+                </label>
+                <div class="mt-2">
+                  <input
+                    type="text"
+                    name="full_name"
+                    id="full_name"
+                    value={profile?.full_name}
+                    class="block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                    placeholder="Your full name"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  for="bio"
+                  class="block text-sm font-medium text-slate-300"
+                >
+                  Bio
+                </label>
+                <div class="mt-2">
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    rows="3"
+                    class="block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                    placeholder="Tell us about your builder journey..."
+                    >{profile?.bio}</textarea
+                  >
+                </div>
+              </div>
+
+              <div class="flex justify-end">
+                <button
+                  type="submit"
+                  id="submitBtn"
+                  class="inline-flex items-center px-6 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-accent-500 hover:from-primary-700 hover:to-accent-600 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span class="inline-flex items-center gap-2">
+                    <span>Save Changes</span>
+                    <span id="submitSpinner" class="hidden">
+                      <svg
+                        class="animate-spin h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Social Links Section -->
+        <div>
+          <div class="text-center mb-8 animate-fade-in">
+            <span class="text-primary-400 font-medium">Social Links</span>
+            <h2 class="mt-2 text-2xl font-bold tracking-tight text-white">
+              Connect Your Social Profiles
+            </h2>
+            <p class="mt-4 text-lg text-slate-300">
+              Share your social media profiles to help others connect with you.
+            </p>
+          </div>
+
+          <form
+            id="social-links-form"
+            class="animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 space-y-6"
+          >
+            {
+              [
+                {
+                  platform: "github",
+                  label: "GitHub Profile",
+                  icon: (
+                    <svg
+                      class="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                    </svg>
+                  ),
+                  placeholder: "https://github.com/yourusername",
+                },
+                {
+                  platform: "twitter",
+                  label: "Twitter Profile",
+                  icon: (
+                    <svg
+                      class="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                  ),
+                  placeholder: "https://twitter.com/yourusername",
+                },
+                {
+                  platform: "website",
+                  label: "Personal Website",
+                  icon: (
+                    <svg
+                      class="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="2" y1="12" x2="22" y2="12" />
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                    </svg>
+                  ),
+                  placeholder: "https://yourwebsite.com",
+                },
+              ].map((social) => {
+                const socialLink = socialLinks?.find(
+                  (link) => link.platform === social.platform
+                );
+                return (
+                  <div class="flex items-center gap-4">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-700/50 flex items-center justify-center text-slate-300">
+                      {social.icon}
+                    </div>
+                    <div class="flex-grow">
+                      <label
+                        for={`${social.platform}_url`}
+                        class="block text-sm font-medium text-slate-300 mb-1"
+                      >
+                        {social.label}
+                      </label>
+                      <input
+                        type="url"
+                        name={`${social.platform}_url`}
+                        id={`${social.platform}_url`}
+                        value={socialLink?.url}
+                        class="block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                        placeholder={social.placeholder}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            }
+
+            <div class="flex justify-end pt-4">
+              <button
+                type="submit"
+                id="social-submit-btn"
+                class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-accent-500 hover:from-primary-700 hover:to-accent-600 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span class="inline-flex items-center gap-2">
+                  <span>Save Social Links</span>
+                  <span id="social-spinner" class="hidden">
+                    <svg
+                      class="animate-spin h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  </span>
+                </span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<script>
+  const usernameForm = document.getElementById(
+    "username-form"
+  ) as HTMLFormElement;
+  const profileForm = document.getElementById(
+    "profile-form"
+  ) as HTMLFormElement;
+  const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
+  const submitSpinner = document.getElementById("submitSpinner");
+
+  // Function to show loading state
+  function setLoading(isLoading: boolean) {
+    if (submitBtn && submitSpinner) {
+      submitBtn.disabled = isLoading;
+      if (isLoading) {
+        submitSpinner.classList.remove("hidden");
+        submitBtn.querySelector("span:first-child")!.textContent = "Saving...";
+      } else {
+        submitSpinner.classList.add("hidden");
+        submitBtn.querySelector("span:first-child")!.textContent =
+          "Save Changes";
+      }
+    }
+  }
+
+  // Handle username form submission
+  if (usernameForm) {
+    usernameForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submitButton = usernameForm.querySelector("button");
+      if (submitButton) submitButton.disabled = true;
+
+      try {
+        const formData = new FormData(usernameForm);
+        const response = await fetch("/api/profile", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: formData.get("username"),
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          window.location.href = "/profile?success=true";
+        } else {
+          if (submitButton) submitButton.disabled = false;
+          const searchParams = new URLSearchParams();
+          searchParams.set("error", result.error);
+          window.location.search = searchParams.toString();
+        }
+      } catch (error) {
+        if (submitButton) submitButton.disabled = false;
+        console.error("Error updating username:", error);
+        const searchParams = new URLSearchParams();
+        searchParams.set("error", "Something went wrong. Please try again.");
+        window.location.search = searchParams.toString();
+      }
+    });
+  }
+
+  // Handle profile form submission
+  if (profileForm) {
+    profileForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setLoading(true);
+
+      try {
+        const formData = new FormData(profileForm);
+        const response = await fetch("/api/profile", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            full_name: formData.get("full_name"),
+            bio: formData.get("bio"),
+            avatar_url: formData.get("avatar_url"),
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          window.location.href = "/profile?success=true";
+        } else {
+          setLoading(false);
+          const searchParams = new URLSearchParams();
+          searchParams.set("error", result.error);
+          window.location.search = searchParams.toString();
+        }
+      } catch (error) {
+        setLoading(false);
+        console.error("Error updating profile:", error);
+        const searchParams = new URLSearchParams();
+        searchParams.set("error", "Something went wrong. Please try again.");
+        window.location.search = searchParams.toString();
+      }
+    });
+  }
+
+  // Handle avatar upload
+  const avatarUpload = document.getElementById(
+    "avatar-upload"
+  ) as HTMLInputElement;
+  const avatarPreview = document.getElementById(
+    "avatar-preview"
+  ) as HTMLImageElement;
+
+  if (avatarUpload) {
+    avatarUpload.addEventListener("change", async (e) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
+
+      if (file) {
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (avatarPreview) {
+            avatarPreview.src = e.target?.result as string;
+          } else {
+            // If preview doesn't exist, create it
+            const previewContainer = target.parentElement?.parentElement;
+            if (previewContainer) {
+              const img = document.createElement("img");
+              img.src = e.target?.result as string;
+              img.id = "avatar-preview";
+              img.className =
+                "h-16 w-16 rounded-full object-cover border-2 border-slate-700";
+              img.alt = "Profile";
+              previewContainer.insertBefore(img, previewContainer.firstChild);
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+
+        // Upload the file
+        const formData = new FormData();
+        formData.append("avatar", file);
+
+        try {
+          const response = await fetch("/api/profile/upload-avatar", {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Update the avatar_url input if it exists
+            const avatarUrlInput = document.getElementById(
+              "avatar_url"
+            ) as HTMLInputElement;
+            if (avatarUrlInput) {
+              avatarUrlInput.value = result.data.avatar_url;
+            }
+            window.location.href = "/profile?success=true";
+          } else {
+            throw new Error(result.error);
+          }
+        } catch (error) {
+          console.error("Error uploading avatar:", error);
+          const searchParams = new URLSearchParams();
+          searchParams.set(
+            "error",
+            error instanceof Error
+              ? error.message
+              : "Failed to upload avatar. Please try again."
+          );
+          window.location.search = searchParams.toString();
+        }
+      }
+    });
+  }
+
+  // Add social links form handler
+  const socialLinksForm = document.getElementById(
+    "social-links-form"
+  ) as HTMLFormElement;
+  const socialSubmitBtn = document.getElementById(
+    "social-submit-btn"
+  ) as HTMLButtonElement;
+  const socialSpinner = document.getElementById("social-spinner");
+
+  function setSocialLoading(isLoading: boolean) {
+    if (socialSubmitBtn && socialSpinner) {
+      socialSubmitBtn.disabled = isLoading;
+      if (isLoading) {
+        socialSpinner.classList.remove("hidden");
+        socialSubmitBtn.querySelector("span:first-child")!.textContent =
+          "Saving...";
+      } else {
+        socialSpinner.classList.add("hidden");
+        socialSubmitBtn.querySelector("span:first-child")!.textContent =
+          "Save Social Links";
+      }
+    }
+  }
+
+  if (socialLinksForm) {
+    socialLinksForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      setSocialLoading(true);
+
+      try {
+        const formData = new FormData(socialLinksForm);
+        const socialLinks = ["github", "twitter", "website"]
+          .map((platform) => ({
+            platform,
+            url: formData.get(`${platform}_url`),
+          }))
+          .filter((link) => link.url);
+
+        const response = await fetch("/api/profile", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            social_links: socialLinks,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          window.location.href = "/profile?success=true";
+        } else {
+          setSocialLoading(false);
+          const searchParams = new URLSearchParams();
+          searchParams.set("error", result.error);
+          window.location.search = searchParams.toString();
+        }
+      } catch (error) {
+        setSocialLoading(false);
+        console.error("Error updating social links:", error);
+        const searchParams = new URLSearchParams();
+        searchParams.set(
+          "error",
+          "Failed to update social links. Please try again."
+        );
+        window.location.search = searchParams.toString();
+      }
+    });
+  }
+</script>
