@@ -1,6 +1,13 @@
 import type { APIRoute } from "astro";
 import { Client } from "@notionhq/client";
-import { supabase } from "../../lib/supabase";
+import { supabaseAdmin as supabase } from "../../lib/supabase";
+
+// Function to normalize email addresses by removing + suffix
+function normalizeEmail(email: string): string {
+  const [localPart, domain] = email.split("@");
+  const normalizedLocal = localPart.split("+")[0];
+  return `${normalizedLocal}@${domain}`;
+}
 
 const notion = new Client({
   auth: import.meta.env.PUBLIC_NOTION_TOKEN,
@@ -55,6 +62,44 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    // Check if user already exists in Supabase
+    const {
+      data: { users: existingUsers },
+      error: getUserError,
+    } = await supabase.auth.admin.listUsers();
+
+    // Normalize the input email
+    const normalizedEmail = normalizeEmail(email!);
+
+    // Check for existing users with normalized email
+    const existingUser = existingUsers.find(
+      (user) => normalizeEmail(user.email || "") === normalizedEmail
+    );
+
+    if (getUserError) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Failed to check user existence",
+        }),
+        {
+          status: 500,
+        }
+      );
+    }
+
+    if (existingUser) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "This email is already registered. Please sign in instead.",
+        }),
+        {
+          status: 400,
+        }
+      );
+    }
+
     // Create Notion entry
     await notion.pages.create({
       parent: { database_id: DATABASE_ID },
@@ -102,6 +147,47 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (error) {
       return new Response(error.message, { status: 500 });
+    }
+
+    // Get the user ID from the OTP signup - we need to list users again to get the newly created user
+    const {
+      data: { users: allUsers },
+    } = await supabase.auth.admin.listUsers();
+
+    // Use normalized email to find the new user
+    const newUser = allUsers.find(
+      (user) => normalizeEmail(user.email || "") === normalizedEmail
+    );
+
+    if (!newUser?.id) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Failed to create user profile",
+        }),
+        {
+          status: 500,
+        }
+      );
+    }
+
+    // Create the initial profile
+    const { error: profileError } = await supabase.from("profiles").insert({
+      user_id: newUser.id,
+      username: username,
+      created_at: new Date().toISOString(),
+    });
+
+    if (profileError) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Failed to create user profile",
+        }),
+        {
+          status: 500,
+        }
+      );
     }
 
     return new Response(

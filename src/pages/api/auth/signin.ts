@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { supabase } from "../../../lib/supabase";
+import { supabase, supabaseAdmin } from "../../../lib/supabase";
 import type { Provider } from "@supabase/supabase-js";
 
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
@@ -30,10 +30,24 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   }
 
   try {
+    // Check if user exists first
+    const {
+      data: { users },
+    } = await supabaseAdmin.auth.admin.listUsers();
+    const userExists = users.some((user) => user.email === email);
+
+    if (!userExists) {
+      return redirect(
+        `/signin?error=${encodeURIComponent(
+          "No account associated with this email. Please use the link below to join the community..."
+        )}`
+      );
+    }
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        shouldCreateUser: true,
+        shouldCreateUser: false, // Ensure we don't create new users
         emailRedirectTo: import.meta.env.DEV
           ? "http://localhost:1234/api/auth/callback"
           : "https://12in12.pro/api/auth/callback",

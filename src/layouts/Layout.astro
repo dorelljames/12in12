@@ -6,10 +6,11 @@ interface Props {
 const { title = "12 Products in 12 Months" } = Astro.props;
 import "../styles/main.css";
 import "../styles/animations.css";
+import ProfileBanner from "../components/ProfileBanner.astro";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-full w-full">
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content="Build 12 products in 12 months" />
@@ -24,13 +25,13 @@ import "../styles/animations.css";
       is:inline
       async></script>
   </head>
-  <body>
+  <body class="flex flex-col h-full w-full">
     <slot />
     <script src="../utils/scroll-animations.js"></script>
   </body>
 </html>
 
-<style>
+<style is:global>
   html,
   body {
     margin: 0;

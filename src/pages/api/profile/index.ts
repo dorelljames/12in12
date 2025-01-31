@@ -21,6 +21,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       access_token: accessToken,
       refresh_token: refreshToken,
     });
+    console.log("🚀 ~ constPOST:APIRoute= ~ user:", user);
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -57,15 +58,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
 
     // Update profile
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({
+    const { error: updateError } = await supabase.from("profiles").upsert(
+      {
         username,
         full_name,
         bio,
         avatar_url,
-      })
-      .eq("user_id", user.id);
+        user_id: user.id,
+      },
+      {
+        onConflict: "user_id",
+      }
+    );
 
     if (updateError) {
       console.error("Error updating profile:", updateError);

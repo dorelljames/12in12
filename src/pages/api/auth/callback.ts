@@ -40,5 +40,5 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     httpOnly: true,
   });
 
-  return redirect("/");
+  return redirect("/profile");
 };

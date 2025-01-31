@@ -1,5 +1,6 @@
 ---
 import Navbar from "../components/Navbar.astro";
+import ProfileBanner from "../components/ProfileBanner.astro";
 
 interface Props {
   title: string;
@@ -30,6 +31,7 @@ const canonicalURL = "";
   </head>
   <body class="flex flex-col h-full w-full bg-slate-900">
     <Navbar />
+    <ProfileBanner />
     <section class="relative overflow-hidden pt-20 pb-28 sm:py-32">
       <slot />
     </section>
