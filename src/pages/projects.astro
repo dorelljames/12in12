@@ -119,21 +119,21 @@ const jsonLd = {
 const getStatusConfig = (status: string = "not_started") => {
   const configs = {
     completed: {
-      dotColor: "bg-emerald-500",
-      textColor: "text-emerald-600",
-      bgColor: "bg-emerald-50",
+      dotColor: "bg-emerald-400",
+      textColor: "text-emerald-200",
+      bgColor: "bg-emerald-900/50",
       label: "Completed",
     },
     in_progress: {
-      dotColor: "bg-amber-500",
-      textColor: "text-amber-600",
-      bgColor: "bg-amber-50",
+      dotColor: "bg-amber-400",
+      textColor: "text-amber-200",
+      bgColor: "bg-amber-900/50",
       label: "In Progress",
     },
     not_started: {
-      dotColor: "bg-gray-300",
-      textColor: "text-gray-400",
-      bgColor: "bg-gray-50",
+      dotColor: "bg-slate-400",
+      textColor: "text-slate-200",
+      bgColor: "bg-slate-800/50",
       label: "Not Started",
     },
   };
@@ -179,12 +179,12 @@ const getStatusConfig = (status: string = "not_started") => {
 
   <Navbar />
 
-  <main class="bg-slate-50 pt-24 pb-16 mb-16">
+  <main class="bg-slate-900 pt-24 pb-16">
     <div class="container mx-auto px-4">
       {/* Header */}
       <div class="max-w-3xl mx-auto text-center mb-16">
-        <h1 class="text-4xl font-bold text-slate-900 mb-4">Builder Projects</h1>
-        <p class="text-lg text-slate-600">
+        <h1 class="text-4xl font-bold text-white mb-4">Builder Projects</h1>
+        <p class="text-lg text-slate-300">
           Discover what our community is building, one month at a time
         </p>
       </div>
@@ -194,51 +194,49 @@ const getStatusConfig = (status: string = "not_started") => {
         class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12"
       >
         <div
-          class="bg-white rounded-xl p-4 text-center shadow-sm border border-slate-200"
+          class="bg-slate-800/50 rounded-xl p-4 text-center shadow-lg border border-slate-700/50"
         >
-          <div class="text-3xl font-bold text-slate-900 mb-1">
-            {stats.total}
-          </div>
-          <div class="text-sm font-medium text-slate-600">Total Projects</div>
+          <div class="text-3xl font-bold text-white mb-1">{stats.total}</div>
+          <div class="text-sm font-medium text-slate-300">Total Projects</div>
         </div>
         <div
-          class="bg-emerald-50 rounded-xl p-4 text-center shadow-sm border border-emerald-100"
+          class="bg-emerald-900/50 rounded-xl p-4 text-center shadow-lg border border-emerald-700/50"
         >
-          <div class="text-3xl font-bold text-emerald-600 mb-1">
+          <div class="text-3xl font-bold text-emerald-400 mb-1">
             {stats.completed}
           </div>
-          <div class="text-sm font-medium text-emerald-900">Completed</div>
+          <div class="text-sm font-medium text-emerald-200">Completed</div>
         </div>
         <div
-          class="bg-amber-50 rounded-xl p-4 text-center shadow-sm border border-amber-100"
+          class="bg-amber-900/50 rounded-xl p-4 text-center shadow-lg border border-amber-700/50"
         >
-          <div class="text-3xl font-bold text-amber-600 mb-1">
+          <div class="text-3xl font-bold text-amber-400 mb-1">
             {stats.inProgress}
           </div>
-          <div class="text-sm font-medium text-amber-900">In Progress</div>
+          <div class="text-sm font-medium text-amber-200">In Progress</div>
         </div>
         <div
-          class="bg-slate-50 rounded-xl p-4 text-center shadow-sm border border-slate-200"
+          class="bg-slate-800/50 rounded-xl p-4 text-center shadow-lg border border-slate-700/50"
         >
-          <div class="text-3xl font-bold text-slate-600 mb-1">
+          <div class="text-3xl font-bold text-slate-400 mb-1">
             {stats.notStarted}
           </div>
-          <div class="text-sm font-medium text-slate-900">Launching Soon</div>
+          <div class="text-sm font-medium text-slate-300">Launching Soon</div>
         </div>
       </div>
 
       {/* Filters */}
       <div
-        class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-12 max-w-7xl mx-auto"
+        class="bg-slate-800/50 rounded-xl shadow-lg border border-slate-700/50 p-6 mb-12 max-w-7xl mx-auto"
       >
-        <div class="flex flex-col md:flex-row gap-6">
+        <div class="flex flex-col md:flex-row gap-6 p-2">
           {/* Status Filter */}
           <div class="flex-1">
-            <label class="block text-sm font-medium text-slate-700 mb-2"
+            <label class="block text-sm font-medium text-slate-300 mb-2"
               >Status</label
             >
             <select
-              class="w-full rounded-lg border-slate-300 text-slate-700 text-sm"
+              class="w-full rounded-lg bg-slate-700 border border-slate-600 text-slate-200 text-sm px-4 py-2.5 appearance-none hover:bg-slate-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
               onchange="window.location.href = this.value"
             >
               <option value="/projects" selected={!status}>All Statuses</option>
@@ -265,11 +263,11 @@ const getStatusConfig = (status: string = "not_started") => {
 
           {/* Month Filter */}
           <div class="flex-1">
-            <label class="block text-sm font-medium text-slate-700 mb-2"
+            <label class="block text-sm font-medium text-slate-300 mb-2"
               >Month</label
             >
             <select
-              class="w-full rounded-lg border-slate-300 text-slate-700 text-sm"
+              class="w-full rounded-lg bg-slate-700 border border-slate-600 text-slate-200 text-sm px-4 py-2.5 appearance-none hover:bg-slate-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
               onchange="window.location.href = this.value"
             >
               <option value="/projects" selected={!month}>All Months</option>
@@ -293,10 +291,10 @@ const getStatusConfig = (status: string = "not_started") => {
           projects?.map((project) => (
             <a
               href={`/projects/${project.slug}`}
-              class="block bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow border border-slate-200 overflow-hidden group"
+              class="block bg-slate-800/50 rounded-xl shadow-lg hover:shadow-xl transition-all border border-slate-700/50 overflow-hidden group hover:border-primary-500/30"
             >
               {/* Project Thumbnail */}
-              <div class="relative h-48 bg-slate-100">
+              <div class="relative h-48 bg-slate-800">
                 {project.thumbnail_url ? (
                   <img
                     src={project.thumbnail_url}
@@ -304,8 +302,8 @@ const getStatusConfig = (status: string = "not_started") => {
                     class="w-full h-full object-cover"
                   />
                 ) : (
-                  <div class="flex items-center justify-center h-full">
-                    <span class="text-slate-400">
+                  <div class="flex items-center justify-center h-full bg-gradient-to-br from-slate-800 to-slate-900">
+                    <span class="text-slate-500">
                       {project.status === "not_started"
                         ? "🚀 Coming Soon"
                         : "🏗️ Building"}
@@ -314,7 +312,7 @@ const getStatusConfig = (status: string = "not_started") => {
                 )}
                 <div class="absolute top-4 right-4">
                   <span
-                    class={`px-3 py-1 rounded-full text-xs font-medium ${getStatusConfig(project.status).bgColor} ${getStatusConfig(project.status).textColor}`}
+                    class={`px-3 py-1.5 rounded-full text-xs font-medium ${getStatusConfig(project.status).bgColor} ${getStatusConfig(project.status).textColor} shadow-sm backdrop-blur-sm bg-opacity-90`}
                   >
                     {getStatusConfig(project.status).label}
                   </span>
@@ -328,31 +326,31 @@ const getStatusConfig = (status: string = "not_started") => {
                     <img
                       src={project.profiles.avatar_url}
                       alt={project.profiles.username}
-                      class="w-10 h-10 rounded-full"
+                      class="w-10 h-10 rounded-full ring-2 ring-slate-700"
                     />
                   ) : (
-                    <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
-                      <span class="text-slate-500 text-sm">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-900 to-primary-800 flex items-center justify-center ring-2 ring-slate-700">
+                      <span class="text-primary-200 text-sm">
                         {project.profiles.username?.[0]?.toUpperCase()}
                       </span>
                     </div>
                   )}
                   <div>
-                    <h4 class="text-sm font-medium text-slate-900">
+                    <h4 class="text-sm font-medium text-slate-200">
                       {project.profiles.full_name || project.profiles.username}
                     </h4>
-                    <div class="text-xs text-slate-500 hover:text-primary-600">
+                    <div class="text-xs text-slate-400 hover:text-primary-400">
                       @{project.profiles.username}
                     </div>
                   </div>
                 </div>
 
                 {/* Project Info */}
-                <h3 class="text-xl font-semibold text-slate-900 mb-2 group-hover:text-primary-600 transition-colors">
+                <h3 class="text-xl font-semibold text-slate-200 mb-2 group-hover:text-primary-400 transition-colors">
                   {project.title}
                 </h3>
                 {project.description && (
-                  <p class="text-slate-600 text-sm mb-4 line-clamp-2">
+                  <p class="text-slate-300 text-sm mb-4 line-clamp-2">
                     {project.description}
                   </p>
                 )}
@@ -361,7 +359,7 @@ const getStatusConfig = (status: string = "not_started") => {
                 {project.tech_stack && (
                   <div class="flex flex-wrap gap-2 mb-4">
                     {project.tech_stack.map((tech: string) => (
-                      <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs">
+                      <span class="px-2 py-1 bg-slate-700/50 text-slate-300 rounded text-xs border border-slate-600/50">
                         {tech}
                       </span>
                     ))}
@@ -370,9 +368,9 @@ const getStatusConfig = (status: string = "not_started") => {
 
                 {/* Links - Only show for completed projects */}
                 {project.status === "completed" && (
-                  <div class="flex gap-3 mt-4 pt-4 border-t border-slate-100">
+                  <div class="flex gap-3 mt-4 pt-4 border-t border-slate-700/50">
                     {project.github_url && (
-                      <div class="inline-flex items-center text-sm text-slate-500 hover:text-slate-700">
+                      <div class="inline-flex items-center text-sm text-slate-400 hover:text-slate-200">
                         <svg
                           class="w-4 h-4 mr-1"
                           viewBox="0 0 24 24"
@@ -384,7 +382,7 @@ const getStatusConfig = (status: string = "not_started") => {
                       </div>
                     )}
                     {project.demo_url && (
-                      <div class="inline-flex items-center text-sm text-slate-500 hover:text-slate-700">
+                      <div class="inline-flex items-center text-sm text-slate-400 hover:text-slate-200">
                         <svg
                           class="w-4 h-4 mr-1"
                           viewBox="0 0 24 24"
@@ -420,10 +418,10 @@ const getStatusConfig = (status: string = "not_started") => {
         (!projects || projects.length === 0) && (
           <div class="text-center py-12">
             <div class="text-slate-400 mb-4">🔍</div>
-            <h3 class="text-lg font-medium text-slate-900 mb-2">
+            <h3 class="text-lg font-medium text-slate-200 mb-2">
               No Projects Found
             </h3>
-            <p class="text-slate-600">
+            <p class="text-slate-400">
               Try adjusting your filters to find what you're looking for
             </p>
           </div>
