@@ -24,6 +24,9 @@ import ProfileBanner from "../components/ProfileBanner.astro";
       data-token="941e2350-8b1f-4f87-8b02-53d93290d3dd"
       is:inline
       async></script>
+
+    <!-- Additional head elements -->
+    <slot name="head" />
   </head>
   <body class="flex flex-col h-full w-full">
     <slot />

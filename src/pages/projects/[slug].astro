@@ -69,9 +69,63 @@ const formatDate = (date: string) => {
     year: "numeric",
   });
 };
+
+// Prepare SEO metadata
+const title = `${project.title} - 12 in 12`;
+const description = project.description
+  ? `${project.description.slice(0, 155)}...`
+  : `Check out ${project.title}, a project by ${project.profiles.full_name || project.profiles.username} as part of the 12 in 12 challenge.`;
+
+const ogImage =
+  project.thumbnail_url || `${Astro.url.origin}/images/og-default.png`;
+
+// Prepare JSON-LD structured data
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: project.title,
+  description: project.description,
+  author: {
+    "@type": "Person",
+    name: project.profiles.full_name || project.profiles.username,
+    url: `${Astro.url.origin}/${project.profiles.username}`,
+  },
+  datePublished: project.created_at,
+  dateModified: project.updated_at || project.created_at,
+  ...(project.completed_at && { dateCompleted: project.completed_at }),
+  ...(project.tech_stack && {
+    applicationCategory: project.tech_stack.join(", "),
+  }),
+  ...(project.demo_url && { url: project.demo_url }),
+  ...(project.github_url && { codeRepository: project.github_url }),
+  status: getStatusConfig(project.status).label,
+};
 ---
 
-<Layout title={`${project.title} - 12 in 12`}>
+<Layout title={title}>
+  <head slot="head">
+    <!-- Primary Meta Tags -->
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={Astro.url} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={Astro.url} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={ogImage} />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+
   <Navbar />
 
   <main class="bg-slate-900 pt-24 pb-16">
