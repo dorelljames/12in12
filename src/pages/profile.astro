@@ -126,209 +126,240 @@ const { data: socialLinks } = await supabase
         }
 
         <!-- Username Section -->
-        <div class="mb-16">
-          <div class="text-center mb-8 animate-fade-in">
-            <span class="text-primary-400 font-medium"
-              >Your Builder Identity</span
+        <div class="relative mb-16">
+          <div class="absolute inset-0 flex items-center" aria-hidden="true">
+            <div class="w-full border-t border-slate-700/50"></div>
+          </div>
+          <div class="relative flex justify-center">
+            <span class="bg-slate-900 px-4 text-sm text-slate-400"
+              >Username & URL</span
             >
-            <h1
-              class="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl"
-            >
-              {
-                profile?.username
-                  ? "Your Profile URL"
-                  : "Claim Your Profile URL"
-              }
-            </h1>
-            <p class="mt-4 text-lg text-slate-300">
-              {
-                profile?.username
-                  ? "This is your unique profile URL where others can find your projects."
-                  : "Create your unique profile URL to showcase your builder journey."
-              }
-            </p>
           </div>
 
-          <form
-            id="username-form"
-            class="space-y-8 animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50"
-          >
-            <div>
-              <label
-                for="username"
-                class="block text-sm font-medium text-slate-300"
+          <div class="mt-8">
+            <div class="text-center mb-8 animate-fade-in">
+              <span class="text-primary-400 font-medium"
+                >Your Builder Identity</span
               >
-                Choose Your Username
-              </label>
-              <div class="mt-2">
-                <div class="relative flex rounded-md shadow-sm">
-                  <span
-                    class="inline-flex items-center px-3 rounded-l-md border-r border-slate-600 bg-slate-700 text-slate-400 text-sm"
-                  >
-                    12in12.pro/
-                  </span>
-                  <input
-                    type="text"
-                    name="username"
-                    id="username"
-                    required
-                    value={profile?.username}
-                    class="block w-full rounded-none rounded-r-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
-                    placeholder="your-username"
-                  />
-                </div>
-                <p class="mt-2 text-xs text-slate-400">
-                  This will be your public profile URL. Choose wisely as
-                  changing it later might break shared links.
-                </p>
-              </div>
+              <h2 class="mt-2 text-2xl font-bold tracking-tight text-white">
+                {
+                  profile?.username
+                    ? "Your Profile URL"
+                    : "Claim Your Profile URL"
+                }
+              </h2>
+              <p class="mt-4 text-lg text-slate-300">
+                {
+                  profile?.username
+                    ? "This is your unique profile URL where others can find your projects."
+                    : "Create your unique profile URL to showcase your builder journey."
+                }
+              </p>
             </div>
 
-            <div class="flex justify-end">
-              <button
-                type="submit"
-                class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-accent-500 hover:from-primary-700 hover:to-accent-600 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {profile?.username ? "Update Username" : "Claim Username"}
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Profile Details Section -->
-        <div class="mb-16">
-          <div class="text-center mb-8 animate-fade-in">
-            <span class="text-primary-400 font-medium">Profile Details</span>
-            <h2 class="mt-2 text-2xl font-bold tracking-tight text-white">
-              Customize Your Profile
-            </h2>
-            <p class="mt-4 text-lg text-slate-300">
-              Help others know more about you and your builder journey.
-            </p>
-          </div>
-
-          <form
-            id="profile-form"
-            class="space-y-8 animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50"
-          >
-            <div class="space-y-6">
-              <!-- Profile Picture Section -->
+            <form
+              id="username-form"
+              class="space-y-8 animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 shadow-lg"
+            >
               <div>
                 <label
-                  for="avatar"
+                  for="username"
                   class="block text-sm font-medium text-slate-300"
                 >
-                  Profile Picture
+                  Choose Your Username
                 </label>
-                <div class="space-y-4">
-                  {
-                    profile?.avatar_url && (
-                      <div class="relative w-32 h-32 rounded-full overflow-hidden bg-slate-800">
-                        <img
-                          src={profile.avatar_url}
-                          alt="Profile"
-                          class="w-full h-full object-cover"
-                          id="avatar-preview"
-                        />
-                      </div>
-                    )
-                  }
-                  <div class="flex items-center gap-4">
-                    <div class="flex-1">
-                      <input
-                        type="url"
-                        name="avatar_url"
-                        value={profile?.avatar_url}
-                        class="block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
-                        placeholder="https://..."
-                      />
-                    </div>
-                    <span class="text-slate-400">or</span>
-                    <div class="flex-shrink-0">
-                      <label
-                        class="group relative flex items-center justify-center w-32 h-10 rounded-lg border-2 border-dashed border-slate-700 hover:border-primary-500/50 transition-colors cursor-pointer bg-slate-800/50"
-                      >
-                        <input
-                          type="file"
-                          id="avatar-upload"
-                          accept="image/*"
-                          class="sr-only"
-                        />
-                        <div class="flex items-center gap-2">
-                          <span
-                            id="uploadText"
-                            class="text-sm text-slate-400 group-hover:text-primary-400 transition-colors"
-                            >Upload Image</span
-                          >
-                          <svg
-                            id="uploadSpinner"
-                            class="hidden w-4 h-4 animate-spin text-primary-400"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              class="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              stroke-width="4"></circle>
-                            <path
-                              class="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                        </div>
-                      </label>
-                    </div>
+                <div class="mt-2">
+                  <div class="relative flex rounded-md shadow-sm">
+                    <span
+                      class="inline-flex items-center px-3 rounded-l-md border-r border-slate-600 bg-slate-700 text-slate-400 text-sm"
+                    >
+                      12in12.pro/
+                    </span>
+                    <input
+                      type="text"
+                      name="username"
+                      id="username"
+                      required
+                      value={profile?.username}
+                      class="block w-full rounded-none rounded-r-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                      placeholder="your-username"
+                    />
                   </div>
-                  <p class="text-xs text-slate-400">
-                    Supported formats: JPG, PNG, GIF (max. 2MB)
+                  <p class="mt-2 text-xs text-slate-400">
+                    This will be your public profile URL. Choose wisely as
+                    changing it later might break shared links.
                   </p>
                 </div>
               </div>
 
-              <div>
-                <label
-                  for="full_name"
-                  class="block text-sm font-medium text-slate-300"
-                >
-                  Full Name
-                </label>
-                <div class="mt-2">
-                  <input
-                    type="text"
-                    name="full_name"
-                    id="full_name"
-                    value={profile?.full_name}
-                    class="block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
-                    placeholder="Your full name"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  for="bio"
-                  class="block text-sm font-medium text-slate-300"
-                >
-                  Bio
-                </label>
-                <div class="mt-2">
-                  <textarea
-                    id="bio"
-                    name="bio"
-                    rows="3"
-                    class="block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
-                    placeholder="Tell us about your builder journey..."
-                    >{profile?.bio}</textarea
-                  >
-                </div>
-              </div>
-
               <div class="flex justify-end">
+                <button
+                  type="submit"
+                  class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-accent-500 hover:from-primary-700 hover:to-accent-600 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {profile?.username ? "Update Username" : "Claim Username"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Profile Details Section -->
+        <div class="relative mb-16">
+          <div class="absolute inset-0 flex items-center" aria-hidden="true">
+            <div class="w-full border-t border-slate-700/50"></div>
+          </div>
+          <div class="relative flex justify-center">
+            <span class="bg-slate-900 px-4 text-sm text-slate-400"
+              >Profile Details</span
+            >
+          </div>
+
+          <div class="mt-8">
+            <div class="text-center mb-8 animate-fade-in">
+              <span class="text-primary-400 font-medium">Profile Details</span>
+              <h2 class="mt-2 text-2xl font-bold tracking-tight text-white">
+                Customize Your Profile
+              </h2>
+              <p class="mt-4 text-lg text-slate-300">
+                Help others know more about you and your builder journey.
+              </p>
+            </div>
+
+            <form
+              id="profile-form"
+              class="space-y-8 animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 shadow-lg"
+            >
+              <div class="space-y-8">
+                <!-- Profile Picture Section -->
+                <div class="pb-6 border-b border-slate-700/50">
+                  <label
+                    for="avatar"
+                    class="block text-sm font-medium text-slate-300"
+                  >
+                    Profile Picture
+                  </label>
+                  <div class="mt-4 space-y-4">
+                    <div class="flex justify-center">
+                      {
+                        profile?.avatar_url ? (
+                          <div class="relative w-32 h-32 rounded-full overflow-hidden bg-slate-800 ring-4 ring-slate-700/50">
+                            <img
+                              src={profile.avatar_url}
+                              alt="Profile"
+                              class="w-full h-full object-cover"
+                              id="avatar-preview"
+                            />
+                          </div>
+                        ) : (
+                          <div class="relative w-32 h-32 rounded-full overflow-hidden bg-slate-800 ring-4 ring-slate-700/50 flex items-center justify-center">
+                            <span class="text-4xl text-slate-400">
+                              {profile?.username?.[0]?.toUpperCase() || "?"}
+                            </span>
+                          </div>
+                        )
+                      }
+                    </div>
+                    <div class="flex items-center gap-4">
+                      <div class="flex-1">
+                        <input
+                          type="url"
+                          name="avatar_url"
+                          value={profile?.avatar_url}
+                          class="block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                          placeholder="https://..."
+                        />
+                      </div>
+                      <span class="text-slate-400">or</span>
+                      <div class="flex-shrink-0">
+                        <label
+                          class="group relative flex items-center justify-center w-32 h-10 rounded-lg border-2 border-dashed border-slate-700 hover:border-primary-500/50 transition-colors cursor-pointer bg-slate-800/50"
+                        >
+                          <input
+                            type="file"
+                            id="avatar-upload"
+                            accept="image/*"
+                            class="sr-only"
+                          />
+                          <div class="flex items-center gap-2">
+                            <span
+                              id="uploadText"
+                              class="text-sm text-slate-400 group-hover:text-primary-400 transition-colors"
+                              >Upload Image</span
+                            >
+                            <svg
+                              id="uploadSpinner"
+                              class="hidden w-4 h-4 animate-spin text-primary-400"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                class="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="4"></circle>
+                              <path
+                                class="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                    <p class="text-xs text-slate-400">
+                      Supported formats: JPG, PNG, GIF (max. 2MB)
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Basic Info Section -->
+                <div class="space-y-6">
+                  <div>
+                    <label
+                      for="full_name"
+                      class="block text-sm font-medium text-slate-300"
+                    >
+                      Full Name
+                    </label>
+                    <div class="mt-2">
+                      <input
+                        type="text"
+                        name="full_name"
+                        id="full_name"
+                        value={profile?.full_name}
+                        class="block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                        placeholder="Your full name"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      for="bio"
+                      class="block text-sm font-medium text-slate-300"
+                    >
+                      Bio
+                    </label>
+                    <div class="mt-2">
+                      <textarea
+                        id="bio"
+                        name="bio"
+                        rows="3"
+                        class="block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                        placeholder="Tell us about your builder journey..."
+                        >{profile?.bio}</textarea
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end pt-4">
                 <button
                   type="submit"
                   id="submitBtn"
@@ -360,139 +391,151 @@ const { data: socialLinks } = await supabase
                   </span>
                 </button>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
 
         <!-- Social Links Section -->
-        <div>
-          <div class="text-center mb-8 animate-fade-in">
-            <span class="text-primary-400 font-medium">Social Links</span>
-            <h2 class="mt-2 text-2xl font-bold tracking-tight text-white">
-              Connect Your Social Profiles
-            </h2>
-            <p class="mt-4 text-lg text-slate-300">
-              Share your social media profiles to help others connect with you.
-            </p>
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center" aria-hidden="true">
+            <div class="w-full border-t border-slate-700/50"></div>
+          </div>
+          <div class="relative flex justify-center">
+            <span class="bg-slate-900 px-4 text-sm text-slate-400"
+              >Social Links</span
+            >
           </div>
 
-          <form
-            id="social-links-form"
-            class="animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 space-y-6"
-          >
-            {
-              [
-                {
-                  platform: "github",
-                  label: "GitHub Profile",
-                  icon: (
-                    <svg
-                      class="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-                    </svg>
-                  ),
-                  placeholder: "https://github.com/yourusername",
-                },
-                {
-                  platform: "twitter",
-                  label: "Twitter Profile",
-                  icon: (
-                    <svg
-                      class="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                    </svg>
-                  ),
-                  placeholder: "https://twitter.com/yourusername",
-                },
-                {
-                  platform: "website",
-                  label: "Personal Website",
-                  icon: (
-                    <svg
-                      class="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="2" y1="12" x2="22" y2="12" />
-                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                    </svg>
-                  ),
-                  placeholder: "https://yourwebsite.com",
-                },
-              ].map((social) => {
-                const socialLink = socialLinks?.find(
-                  (link) => link.platform === social.platform
-                );
-                return (
-                  <div class="flex items-center gap-4">
-                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-700/50 flex items-center justify-center text-slate-300">
-                      {social.icon}
-                    </div>
-                    <div class="flex-grow">
-                      <label
-                        for={`${social.platform}_url`}
-                        class="block text-sm font-medium text-slate-300 mb-1"
-                      >
-                        {social.label}
-                      </label>
-                      <input
-                        type="url"
-                        name={`${social.platform}_url`}
-                        id={`${social.platform}_url`}
-                        value={socialLink?.url}
-                        class="block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
-                        placeholder={social.placeholder}
-                      />
-                    </div>
-                  </div>
-                );
-              })
-            }
-
-            <div class="flex justify-end pt-4">
-              <button
-                type="submit"
-                id="social-submit-btn"
-                class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-accent-500 hover:from-primary-700 hover:to-accent-600 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span class="inline-flex items-center gap-2">
-                  <span>Save Social Links</span>
-                  <span id="social-spinner" class="hidden">
-                    <svg
-                      class="animate-spin h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        class="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        stroke-width="4"></circle>
-                      <path
-                        class="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                  </span>
-                </span>
-              </button>
+          <div class="mt-8">
+            <div class="text-center mb-8 animate-fade-in">
+              <span class="text-primary-400 font-medium">Social Links</span>
+              <h2 class="mt-2 text-2xl font-bold tracking-tight text-white">
+                Connect Your Social Profiles
+              </h2>
+              <p class="mt-4 text-lg text-slate-300">
+                Share your social media profiles to help others connect with
+                you.
+              </p>
             </div>
-          </form>
+
+            <form
+              id="social-links-form"
+              class="animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 space-y-6"
+            >
+              {
+                [
+                  {
+                    platform: "github",
+                    label: "GitHub Profile",
+                    icon: (
+                      <svg
+                        class="h-5 w-5"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                      </svg>
+                    ),
+                    placeholder: "https://github.com/yourusername",
+                  },
+                  {
+                    platform: "twitter",
+                    label: "Twitter Profile",
+                    icon: (
+                      <svg
+                        class="h-5 w-5"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                      </svg>
+                    ),
+                    placeholder: "https://twitter.com/yourusername",
+                  },
+                  {
+                    platform: "website",
+                    label: "Personal Website",
+                    icon: (
+                      <svg
+                        class="h-5 w-5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="2" y1="12" x2="22" y2="12" />
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                      </svg>
+                    ),
+                    placeholder: "https://yourwebsite.com",
+                  },
+                ].map((social) => {
+                  const socialLink = socialLinks?.find(
+                    (link) => link.platform === social.platform
+                  );
+                  return (
+                    <div class="flex items-center gap-4">
+                      <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-700/50 flex items-center justify-center text-slate-300">
+                        {social.icon}
+                      </div>
+                      <div class="flex-grow">
+                        <label
+                          for={`${social.platform}_url`}
+                          class="block text-sm font-medium text-slate-300 mb-1"
+                        >
+                          {social.label}
+                        </label>
+                        <input
+                          type="url"
+                          name={`${social.platform}_url`}
+                          id={`${social.platform}_url`}
+                          value={socialLink?.url}
+                          class="block w-full rounded-md border-0 bg-slate-700/50 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-slate-600 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                          placeholder={social.placeholder}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              }
+
+              <div class="flex justify-end pt-4">
+                <button
+                  type="submit"
+                  id="social-submit-btn"
+                  class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-primary-600 to-accent-500 hover:from-primary-700 hover:to-accent-600 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span class="inline-flex items-center gap-2">
+                    <span>Save Social Links</span>
+                    <span id="social-spinner" class="hidden">
+                      <svg
+                        class="animate-spin h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </span>
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
