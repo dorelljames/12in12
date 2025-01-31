@@ -75,6 +75,7 @@ interface Product {
   tech_stack?: string[];
   lessons_learned?: string;
   thumbnail_url?: string;
+  slug?: string;
 }
 
 const productGrid: Product[] = months.map((month, index) => {
@@ -845,7 +846,7 @@ const jsonLd = {
                         {status === "completed" && (
                           <>
                             <a
-                              href={`/projects/${product.id}`}
+                              href={`/projects/${product.slug}`}
                               class="inline-flex items-center text-sm font-medium text-emerald-400 hover:text-emerald-300"
                             >
                               View Details
