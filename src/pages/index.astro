@@ -33,7 +33,7 @@ const { data: latestProjects } = await supabase
   `
   )
   .eq("month", currentMonth)
-  .eq("status", "in_progress")
+  .in("status", ["in_progress", "completed"])
   .order("created_at", { ascending: false })
   .limit(6);
 ---
@@ -76,9 +76,9 @@ const { data: latestProjects } = await supabase
                       <span class="text-slate-500">🏗️ Building</span>
                     </div>
                   )}
-                  <div class="absolute top-4 right-4">
-                    <span class="px-3 py-1.5 bg-primary-900/50 text-primary-300 rounded-full text-xs font-medium border border-primary-700/50">
-                      In Progress
+                  <div class="absolute top-4 right-4 ">
+                    <span class="uppercase px-3 py-1.5 bg-primary-900/50 text-primary-300 rounded-full text-xs font-medium border border-primary-700/50">
+                      {project.status}
                     </span>
                   </div>
                 </div>
