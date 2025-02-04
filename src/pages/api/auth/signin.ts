@@ -48,9 +48,6 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
       email,
       options: {
         shouldCreateUser: false, // Ensure we don't create new users
-        emailRedirectTo: import.meta.env.DEV
-          ? "http://localhost:1234/api/auth/callback"
-          : "https://12in12.pro/api/auth/callback",
       },
     });
 

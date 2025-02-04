@@ -327,14 +327,3 @@ const jsonLd = {
   </main>
   <Footer />
 </Layout>
-
-<script>
-  // Handle code parameter from magic link
-  const urlParams = new URLSearchParams(window.location.search);
-  const code = urlParams.get("code");
-  const access_token = urlParams.get("access_token");
-
-  if (code || access_token) {
-    window.location.href = `/api/auth/callback?code=${encodeURIComponent(code || access_token || "")}`;
-  }
-</script>
