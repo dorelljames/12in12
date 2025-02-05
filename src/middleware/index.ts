@@ -75,7 +75,7 @@ export const onRequest = defineMiddleware(
         });
 
         if (!error && data.session) {
-          return redirect("/dashboard");
+          return redirect("/profile");
         }
 
         // If session is invalid, clear the cookies
