@@ -1,5 +1,19 @@
 ---
+import { createClient } from "@supabase/supabase-js";
 import { Image } from "astro:assets";
+
+// Initialize Supabase client
+const supabase = createClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+);
+
+const currentMonth = new Date().toLocaleString("default", { month: "long" });
+const { data: latestProjects } = await supabase
+  .from("products")
+  .select("id")
+  .in("status", ["in_progress"])
+  .eq("month", currentMonth);
 ---
 
 <section class="relative overflow-hidden bg-slate-900 pt-20 pb-28 sm:py-32">
@@ -16,7 +30,7 @@ import { Image } from "astro:assets";
         <div class="h-2 w-2 mt-2 rounded-full bg-emerald-500 animate-pulse">
         </div>
         <span class="text-sm font-medium text-slate-200"
-          >We've launched! 💪</span
+          >WIP: {latestProjects?.length} new projects {currentMonth} 😇</span
         >
       </div>
 
