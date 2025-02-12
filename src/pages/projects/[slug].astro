@@ -248,11 +248,8 @@ const jsonLd = {
             {project.title}
           </h1>
           {
-            project.description && (
-              <p class="text-lg text-slate-300 mb-8 whitespace-pre-wrap leading-relaxed">
-                {project.description}
-              </p>
-            )
+            project.description && // prettier-ignore
+            <p class="text-lg text-slate-300 mb-8 whitespace-pre-wrap leading-relaxed">{project.description}</p>
           }
 
           {/* Project Meta */}
