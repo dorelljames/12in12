@@ -88,8 +88,17 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       .select()
       .single();
 
+    // Create notification
+    await supabase
+      .from("notifications")
+      .insert({
+        comment_id: comment.id,
+        user_id: user.id,
+        type: "comment",
+      })
+      .select();
+
     if (error) {
-      console.log("🚀 ~ returnnewResponse ~ error.message:", error.message);
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
       });
