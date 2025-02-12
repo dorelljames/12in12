@@ -40,7 +40,7 @@ export const GET: APIRoute = async ({ request, cookies }) => {
           full_name,
           avatar_url
         ),
-        content
+        created_at
       )
     `
     )
