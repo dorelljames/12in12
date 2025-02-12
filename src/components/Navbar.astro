@@ -1,5 +1,6 @@
 ---
 import { supabase } from "../lib/supabase";
+import NotificationBell from "./NotificationBell.astro";
 
 // Get auth tokens from cookies
 const accessToken = Astro.cookies.get("sb-access-token")?.value;
@@ -76,6 +77,7 @@ if (accessToken && refreshToken) {
         {
           sessionUser ? (
             <div class="flex items-center space-x-4">
+              <NotificationBell user={sessionUser} />
               <div class="relative" id="user-menu">
                 <button
                   class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 hover:from-primary-700 hover:to-accent-600 transition-colors focus:outline-none overflow-hidden"

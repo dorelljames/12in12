@@ -1,0 +1,172 @@
+---
+import { supabase } from "../lib/supabase";
+
+const { user } = Astro.props;
+
+// Fetch unread notifications count
+const { count } = await supabase
+  .from("notifications")
+  .select("*", { count: "exact", head: true })
+  .eq("user_id", user.id)
+  .eq("is_read", false);
+
+const unreadCount = count || 0;
+---
+
+<div class="relative" id="notification-menu">
+  <button
+    class="relative p-2 text-slate-300 hover:text-white transition-colors"
+    id="notification-menu-button"
+    aria-expanded="false"
+    aria-haspopup="true"
+  >
+    <svg
+      class="w-6 h-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+      ></path>
+    </svg>
+    {
+      unreadCount > 0 && (
+        <span class="absolute top-1 right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-accent-500 rounded-full">
+          {unreadCount}
+        </span>
+      )
+    }
+  </button>
+
+  <div
+    class="hidden absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-slate-800 ring-1 ring-black ring-opacity-5"
+    id="notification-menu-dropdown"
+    role="menu"
+    aria-orientation="vertical"
+    aria-labelledby="notification-menu-button"
+  >
+    <div class="py-1" id="notifications-list">
+      <div class="px-4 py-2 text-sm text-slate-300" id="notifications-loading">
+        Loading notifications...
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let isOpen = false;
+  const notificationButton = document.getElementById(
+    "notification-menu-button"
+  );
+  const notificationDropdown = document.getElementById(
+    "notification-menu-dropdown"
+  );
+  const notificationMenu = document.getElementById("notification-menu");
+  const notificationsList = document.getElementById("notifications-list");
+  const loadingElement = document.getElementById("notifications-loading");
+
+  if (
+    notificationButton &&
+    notificationDropdown &&
+    notificationMenu &&
+    notificationsList &&
+    loadingElement
+  ) {
+    // Toggle menu on button click
+    notificationButton.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      isOpen = !isOpen;
+      notificationButton.setAttribute("aria-expanded", isOpen.toString());
+      notificationDropdown.classList.toggle("hidden");
+
+      if (isOpen) {
+        // Fetch notifications
+        try {
+          const response = await fetch("/api/notifications");
+          const { notifications } = await response.json();
+
+          // Clear loading message
+          notificationsList.innerHTML = "";
+
+          if (notifications.length === 0) {
+            notificationsList.innerHTML = `
+              <div class="px-4 py-2 text-sm text-slate-300">
+                No notifications
+              </div>
+            `;
+            return;
+          }
+
+          // Render notifications
+          notifications.forEach((notification) => {
+            const notificationElement = document.createElement("a");
+            notificationElement.href = `/projects/${notification.project_slug}`;
+            notificationElement.className =
+              "block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white";
+
+            let message = "";
+            if (notification.type === "comment") {
+              message = `${notification.actor_name} commented on your project "${notification.project_title}"`;
+            } else if (notification.type === "like") {
+              message = `${notification.actor_name} liked your project "${notification.project_title}"`;
+            }
+
+            notificationElement.innerHTML = `
+              <div class="flex items-start">
+                <div class="flex-shrink-0">
+                  <img class="h-8 w-8 rounded-full" src="${notification.actor_avatar_url || "/favicon.svg"}" alt="">
+                </div>
+                <div class="ml-3">
+                  <p class="${notification.is_read ? "text-slate-400" : "text-slate-200"}">${message}</p>
+                  <p class="text-xs text-slate-500 mt-1">${new Date(
+                    notification.created_at
+                  ).toLocaleDateString()}</p>
+                </div>
+              </div>
+            `;
+
+            notificationsList.appendChild(notificationElement);
+          });
+
+          // Mark notifications as read
+          await fetch("/api/notifications/mark-read", {
+            method: "POST",
+          });
+
+          // Remove notification count badge
+          const badge = notificationButton.querySelector("span");
+          if (badge) {
+            badge.remove();
+          }
+        } catch (error) {
+          console.error("Error fetching notifications:", error);
+          notificationsList.innerHTML = `
+            <div class="px-4 py-2 text-sm text-red-400">
+              Error loading notifications
+            </div>
+          `;
+        }
+      }
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener("click", (e) => {
+      const target = e.target as Node;
+      if (isOpen && !notificationMenu.contains(target)) {
+        isOpen = false;
+        notificationButton.setAttribute("aria-expanded", "false");
+        notificationDropdown.classList.add("hidden");
+      }
+    });
+
+    // Prevent menu from closing when clicking inside dropdown
+    notificationDropdown.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+  }
+</script>
