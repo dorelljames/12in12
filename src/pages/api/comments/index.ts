@@ -89,14 +89,30 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       .single();
 
     // Create notification
-    await supabase
-      .from("notifications")
-      .insert({
-        comment_id: comment.id,
-        user_id: user.id,
-        type: "comment",
-      })
-      .select();
+    const { data: product } = await supabase
+      .from("products")
+      .select(
+        `
+        *,
+        profile:profile_id (
+          user_id
+        )
+      `
+      )
+      .eq("id", productId)
+      .single();
+    console.log("🚀 ~ constPOST:APIRoute= ~ product:", product);
+    if (product) {
+      const { data: notification } = await supabase
+        .from("notifications")
+        .insert({
+          comment_id: comment.id,
+          user_id: product.profile.user_id,
+          type: "comment",
+        })
+        .select();
+      console.log("🚀 ~ constPOST:APIRoute= ~ notification:", notification);
+    }
 
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {
