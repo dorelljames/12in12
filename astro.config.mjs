@@ -9,7 +9,12 @@ import cloudflare from "@astrojs/cloudflare";
 export default defineConfig({
   output: "server",
   integrations: [tailwind()],
-  adapter: cloudflare(),
+  adapter: cloudflare({
+    imageService: "compile",
+  }),
+  session: {
+    driver: "memory",
+  },
   redirects: {
     "/login": "/signin",
     "/register": "/signin",
