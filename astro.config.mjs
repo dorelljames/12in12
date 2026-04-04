@@ -46,6 +46,6 @@ export default defineConfig({
         default: "https://discord.gg/SGXHPpCTZ4",
       }),
     },
-    validateSecrets: true,
+    validateSecrets: false,
   },
 });
