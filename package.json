@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev --port 1234",
-    "build": "astro build",
+    "build": "astro build && node scripts/fix-wrangler-config.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },
