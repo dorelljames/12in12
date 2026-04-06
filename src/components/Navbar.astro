@@ -49,6 +49,18 @@ if (accessToken && refreshToken) {
       </div>
 
       <div class="hidden md:flex md:items-center md:space-x-8">
+        <a
+          href="/projects"
+          class="text-sm font-medium text-slate-300 hover:text-white transition-colors"
+        >
+          Bets
+        </a>
+        <a
+          href="/feed"
+          class="text-sm font-medium text-slate-300 hover:text-white transition-colors"
+        >
+          Feed
+        </a>
         {
           Astro.url.pathname === "/" && (
             <>

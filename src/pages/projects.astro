@@ -72,19 +72,19 @@ const title = status
   ? `${status
       .split("_")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ")} Projects - 12 in 12`
+      .join(" ")} Bets - 12 in 12`
   : month
-    ? `${month} Projects - 12 in 12`
-    : "All Builder Projects - 12 in 12";
+    ? `${month} Bets - 12 in 12`
+    : "All Builder Bets - 12 in 12";
 
 const description = status
   ? `Discover ${stats[status.replace("_", "") + "ed"] || stats[status.replace("_", "")]} ${status
       .split("_")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ")} projects built by our community of makers.`
+      .join(" ")} bets placed by our community of builders.`
   : month
-    ? `Explore projects being built by our community in ${month}. Join us in building 12 products in 12 months!`
-    : `Discover ${stats.total} projects built by our community of makers. From completed products to work in progress, see what everyone is building.`;
+    ? `Explore bets being made by our community in ${month}. Join us in betting on yourself as a builder!`
+    : `Discover ${stats.total} bets placed by our community of builders. From shipped bets to work in progress, see what everyone is building.`;
 
 // Prepare JSON-LD structured data
 const jsonLd = {
@@ -177,9 +177,9 @@ const getStatusConfig = (status: string = "not_started") => {
     <div class="container mx-auto px-4">
       {/* Header */}
       <div class="max-w-3xl mx-auto text-center mb-16">
-        <h1 class="text-4xl font-bold text-white mb-4">Builder Projects</h1>
+        <h1 class="text-4xl font-bold text-white mb-4">Builder Bets</h1>
         <p class="text-lg text-slate-300">
-          Discover what our community is building, one month at a time
+          Discover what our community is betting on
         </p>
       </div>
 
@@ -191,7 +191,7 @@ const getStatusConfig = (status: string = "not_started") => {
           class="bg-slate-800/50 rounded-xl p-4 text-center shadow-lg border border-slate-700/50"
         >
           <div class="text-3xl font-bold text-white mb-1">{stats.total}</div>
-          <div class="text-sm font-medium text-slate-300">Total Projects</div>
+          <div class="text-sm font-medium text-slate-300">Total Bets</div>
         </div>
         <div
           class="bg-emerald-900/50 rounded-xl p-4 text-center shadow-lg border border-emerald-700/50"
@@ -228,10 +228,10 @@ const getStatusConfig = (status: string = "not_started") => {
         >
           <div>
             <h2 class="text-xl font-semibold text-slate-200">
-              Filter Projects
+              Filter Bets
             </h2>
             <p class="text-sm text-slate-400 mt-1">
-              Find the perfect project to explore
+              Find the perfect bet to explore
             </p>
           </div>
           <button
@@ -248,7 +248,7 @@ const getStatusConfig = (status: string = "not_started") => {
             {/* Search Input */}
             <div>
               <label class="block text-sm font-medium text-slate-300 mb-2"
-                >Search Projects</label
+                >Search Bets</label
               >
               <div class="relative">
                 <input
@@ -489,7 +489,7 @@ const getStatusConfig = (status: string = "not_started") => {
       <div id="empty-state" class="text-center py-12" style="display: none;">
         <div class="text-slate-400 mb-4">🔍</div>
         <h3 class="text-lg font-medium text-slate-200 mb-2">
-          No Projects Found
+          No Bets Found
         </h3>
         <p class="text-slate-400">
           Try adjusting your filters to find what you're looking for

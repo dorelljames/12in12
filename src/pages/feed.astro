@@ -1,0 +1,163 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import { supabase } from "../lib/supabase";
+
+const { data: updates } = await supabase
+  .from("product_updates")
+  .select(`
+    *,
+    profiles:profile_id (
+      username,
+      full_name,
+      avatar_url
+    ),
+    products:product_id (
+      title,
+      slug,
+      status
+    )
+  `)
+  .order("created_at", { ascending: false })
+  .limit(50);
+
+const getTypeConfig = (type: string) => {
+  const configs: Record<string, { emoji: string; label: string; color: string }> = {
+    progress: { emoji: "📈", label: "Progress", color: "text-blue-400" },
+    milestone: { emoji: "🏆", label: "Milestone", color: "text-amber-400" },
+    launch: { emoji: "🚀", label: "Launch", color: "text-emerald-400" },
+    learning: { emoji: "💡", label: "Learning", color: "text-purple-400" },
+  };
+  return configs[type] || configs.progress;
+};
+
+const timeAgo = (date: string) => {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
+const title = "Community Feed - 12 in 12";
+const description = "See what builders are shipping, learning, and launching in the 12 in 12 community.";
+---
+
+<Layout title={title}>
+  <head slot="head">
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={Astro.url} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={Astro.url} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <link rel="canonical" href={new URL("/feed", Astro.url.origin).toString()} />
+  </head>
+
+  <Navbar />
+
+  <main class="bg-slate-900 pt-24 pb-16">
+    <div class="container mx-auto px-4">
+      {/* Header */}
+      <div class="max-w-3xl mx-auto text-center mb-16">
+        <h1 class="text-4xl font-bold text-white mb-4">Community Feed</h1>
+        <p class="text-lg text-slate-300">
+          See what builders are shipping, learning, and launching
+        </p>
+      </div>
+
+      {/* Feed */}
+      <div class="max-w-3xl mx-auto space-y-6">
+        {
+          updates && updates.length > 0 ? (
+            updates.map((update) => {
+              const typeConfig = getTypeConfig(update.type);
+              return (
+                <div class="bg-slate-800/50 rounded-xl shadow-lg border border-slate-700/50 p-6 hover:shadow-xl transition-all hover:border-primary-500/30">
+                  {/* Header: Avatar, Name, Type Badge, Time */}
+                  <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                      <a href={`/${update.profiles?.username}`} class="shrink-0">
+                        {update.profiles?.avatar_url ? (
+                          <img
+                            src={update.profiles.avatar_url}
+                            alt={update.profiles.username}
+                            class="w-10 h-10 rounded-full ring-2 ring-slate-700"
+                          />
+                        ) : (
+                          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-900 to-primary-800 flex items-center justify-center ring-2 ring-slate-700">
+                            <span class="text-primary-200 text-sm">
+                              {update.profiles?.username?.[0]?.toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </a>
+                      <div>
+                        <a
+                          href={`/${update.profiles?.username}`}
+                          class="text-sm font-medium text-slate-200 hover:text-primary-400 transition-colors"
+                        >
+                          {update.profiles?.full_name || update.profiles?.username}
+                        </a>
+                        <div class="flex items-center gap-2 mt-0.5">
+                          <span class={`text-xs font-medium ${typeConfig.color}`}>
+                            {typeConfig.emoji} {typeConfig.label}
+                          </span>
+                          <span class="text-slate-600">·</span>
+                          <time class="text-xs text-slate-500">
+                            {timeAgo(update.created_at)}
+                          </time>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Related Bet */}
+                  {update.products && (
+                    <div class="mb-3">
+                      <a
+                        href={`/projects/${update.products.slug}`}
+                        class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-700/50 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-primary-400 transition-colors border border-slate-600/50"
+                      >
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        {update.products.title}
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Update Content */}
+                  <p class="text-slate-300 whitespace-pre-wrap leading-relaxed text-sm">
+                    {update.content}
+                  </p>
+                </div>
+              );
+            })
+          ) : (
+            <div class="text-center py-16 bg-slate-800/50 rounded-2xl border border-slate-700">
+              <div class="text-4xl mb-4">🌱</div>
+              <h3 class="text-lg font-medium text-slate-200 mb-2">
+                No updates yet
+              </h3>
+              <p class="text-slate-400">
+                Be the first to share!
+              </p>
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>

@@ -46,23 +46,7 @@ const { data: products, error: productsError } = await supabase
   .eq("profile_id", profile?.id)
   .order("created_at", { ascending: false });
 
-// Create array of 12 months with existing products or empty slots
-const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-type ProductStatus = "completed" | "in_progress" | "not_started";
+type ProductStatus = "completed" | "in_progress" | "not_started" | "canceled" | "parked";
 
 interface Product {
   id?: string;
@@ -76,70 +60,45 @@ interface Product {
   lessons_learned?: string;
   thumbnail_url?: string;
   slug?: string;
+  created_at?: string;
+  started_at?: string;
+  deadline?: string;
+  motivation?: "profit" | "impact" | "craft";
 }
 
-const productGrid: Product[] = months.map((month, index) => {
-  const product = products?.find((p: any) => p.month === month) || {
-    month,
-    title: `Product ${index + 1}`,
-    description: "",
-    status: "not_started" as ProductStatus,
+const getStatusConfig = (status: string = "not_started") => {
+  const configs: Record<string, { dotColor: string; textColor: string; bgColor: string; label: string }> = {
+    completed: { dotColor: "bg-emerald-500", textColor: "text-emerald-200", bgColor: "bg-emerald-900/50", label: "Shipped" },
+    in_progress: { dotColor: "bg-amber-500", textColor: "text-amber-200", bgColor: "bg-amber-900/50", label: "Building" },
+    not_started: { dotColor: "bg-gray-500", textColor: "text-gray-300", bgColor: "bg-gray-800/50", label: "Planned" },
+    canceled: { dotColor: "bg-red-500", textColor: "text-red-200", bgColor: "bg-red-900/50", label: "Canceled" },
+    parked: { dotColor: "bg-slate-500", textColor: "text-slate-200", bgColor: "bg-slate-800/50", label: "Parked" },
   };
-  return product;
-});
-
-const getStatusConfig = (status: ProductStatus = "not_started") => {
-  const configs = {
-    completed: {
-      dotColor: "bg-emerald-500",
-      textColor: "text-emerald-600",
-      label: "Completed",
-    },
-    in_progress: {
-      dotColor: "bg-amber-500",
-      textColor: "text-amber-600",
-      label: "In Progress",
-    },
-    not_started: {
-      dotColor: "bg-gray-300",
-      textColor: "text-gray-400",
-      label: "Not Started",
-    },
-  };
-  return configs[status];
+  return configs[status] || configs.not_started;
 };
 
-// Add these new calculations
-const completedCount = productGrid.filter(
-  (p) => p.status === "completed"
-).length;
-const inProgressCount = productGrid.filter(
-  (p) => p.status === "in_progress"
-).length;
-const currentMonth = new Date().toLocaleString("default", { month: "long" });
-
-// Add streak calculation
-const getCurrentStreak = (products: Product[]) => {
-  let streak = 0;
-  const today = new Date();
-  const currentMonth = today.getMonth();
-
-  for (let i = currentMonth; i >= 0; i--) {
-    const monthProduct = products?.find((p) => p.month === months[i]);
-    if (
-      monthProduct &&
-      (monthProduct.status === "completed" ||
-        monthProduct.status === "in_progress")
-    ) {
-      streak++;
-    } else {
-      break;
-    }
-  }
-  return streak;
+const getMotivationConfig = (motivation?: string) => {
+  const configs: Record<string, { label: string; color: string; bgColor: string }> = {
+    profit: { label: "For Profit", color: "text-emerald-300", bgColor: "bg-emerald-900/50 border-emerald-700/50" },
+    impact: { label: "For Impact", color: "text-blue-300", bgColor: "bg-blue-900/50 border-blue-700/50" },
+    craft: { label: "For Craft", color: "text-purple-300", bgColor: "bg-purple-900/50 border-purple-700/50" },
+  };
+  return motivation ? configs[motivation] : null;
 };
 
-const streak = getCurrentStreak(productGrid);
+const completedCount = (products || []).filter(
+  (p: Product) => p.status === "completed"
+).length;
+const inProgressCount = (products || []).filter(
+  (p: Product) => p.status === "in_progress"
+).length;
+const totalBets = (products || []).length;
+
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+};
 
 // Add new types
 interface Update {
@@ -189,10 +148,10 @@ const { data: socialLinks, error: socialLinksError } = await supabase
   .order("platform");
 
 // Prepare SEO metadata
-const title = `${profile?.full_name || username}'s Builder Journey - 12 in 12`;
+const title = `${profile?.full_name || username}'s Bets - 12 in 12`;
 const description = profile?.bio
-  ? `${profile.bio} • Building ${completedCount} shipped products and ${inProgressCount} in progress.`
-  : `Follow ${profile?.full_name || username}'s journey of building 12 products in 12 months. ${completedCount} products shipped, ${inProgressCount} in progress.`;
+  ? `${profile.bio} • ${completedCount} bets shipped, ${inProgressCount} in progress.`
+  : `Follow ${profile?.full_name || username}'s journey betting on themselves. ${totalBets} bets placed, ${completedCount} shipped, ${inProgressCount} in progress.`;
 
 // Prepare JSON-LD structured data
 const jsonLd = {
@@ -214,7 +173,7 @@ const jsonLd = {
     memberOf: {
       "@type": "Organization",
       name: "12 in 12",
-      description: "Community of makers building 12 products in 12 months",
+      description: "Community of builders betting on themselves, one build at a time",
     },
     makesOffer: products?.map((product) => ({
       "@type": "SoftwareApplication",
@@ -273,7 +232,7 @@ const jsonLd = {
         <ShareUpdateModal profileId={profile.id} products={products || []} />
       )
     }
-    {isOwned && <ProjectModal profileId={profile.id} month="" />}
+    {isOwned && <ProjectModal profileId={profile.id} />}
     <main class="flex-1 bg-gray-900">
       {/* Hero Section */}
       <div class="bg-gray-800 border-b border-gray-700">
@@ -285,7 +244,7 @@ const jsonLd = {
                   {profile?.full_name || username}'s Builder Journey
                 </h1>
                 <p class="text-lg text-gray-300 mb-6">
-                  {profile?.bio || "Building in public • One product a month"}
+                  {profile?.bio || "Betting on themselves, one build at a time"}
                 </p>
 
                 {/* Social Links */}
@@ -421,7 +380,15 @@ const jsonLd = {
             </div>
 
             {/* Quick Stats */}
-            <div class="grid grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-3 gap-6 mb-8">
+              <div
+                class="bg-gray-900/50 rounded-xl p-4 text-center border border-gray-700/50"
+              >
+                <div class="text-3xl font-bold text-white mb-1">
+                  {totalBets}
+                </div>
+                <div class="text-sm font-medium text-gray-300">Bets Made</div>
+              </div>
               <div
                 class="bg-emerald-900/50 rounded-xl p-4 text-center border border-emerald-700/50"
               >
@@ -436,72 +403,7 @@ const jsonLd = {
                 <div class="text-3xl font-bold text-amber-400 mb-1">
                   {inProgressCount}
                 </div>
-                <div class="text-sm font-medium text-amber-200">Building</div>
-              </div>
-              <div
-                class="bg-purple-900/50 rounded-xl p-4 text-center border border-purple-700/50"
-              >
-                <div class="text-3xl font-bold text-purple-400 mb-1">
-                  {streak}
-                </div>
-                <div class="text-sm font-medium text-purple-200">
-                  Month Streak
-                </div>
-              </div>
-              <div
-                class="bg-blue-900/50 rounded-xl p-4 text-center border border-blue-700/50"
-              >
-                <div class="text-3xl font-bold text-blue-400 mb-1">
-                  {
-                    productGrid.reduce(
-                      (acc, product) => acc + (product.github_url ? 1 : 0),
-                      0
-                    )
-                  }
-                </div>
-                <div class="text-sm font-medium text-blue-200">Open Source</div>
-              </div>
-            </div>
-
-            {/* Timeline Progress */}
-            <div
-              class="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6 mb-8"
-            >
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="font-semibold text-white">{new Date().getFullYear()} Progress</h3>
-                <span class="text-sm text-gray-400"
-                  >Current: {currentMonth}</span
-                >
-              </div>
-              <div class="grid grid-cols-12 gap-2">
-                {
-                  months.map((month, index) => {
-                    const product = productGrid[index];
-                    const isCurrent = month === currentMonth;
-                    return (
-                      <button
-                        type="button"
-                        class={`
-                          relative h-2 rounded-full transition-all duration-300 cursor-pointer
-                          ${
-                            product.status === "completed"
-                              ? "bg-emerald-500"
-                              : product.status === "in_progress"
-                                ? "bg-amber-500"
-                                : "bg-gray-700"
-                          }
-                          ${isCurrent ? "ring-2 ring-offset-2 ring-offset-gray-800 ring-emerald-500" : ""}
-                          ${isOwned ? "hover:opacity-80" : "cursor-default"}
-                        `}
-                        title={`${month}: ${product.status || "Not Started"}`}
-                        data-project={JSON.stringify({
-                          ...product,
-                          month,
-                        })}
-                      />
-                    );
-                  })
-                }
+                <div class="text-sm font-medium text-amber-200">Active</div>
               </div>
             </div>
           </div>
@@ -687,86 +589,121 @@ const jsonLd = {
         </div>
       </div>
 
-      {/* Products Grid */}
+      {/* Bets Section */}
       <div class="bg-gray-800 py-12 border-t border-gray-700">
         <div class="container mx-auto px-4">
-          <h2 class="text-2xl font-bold text-white mb-8">Products Timeline</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold text-white">Bets</h2>
             {
-              productGrid.map((product) => {
-                const status =
-                  product.status || (product.id ? "completed" : "not_started");
-                const isActive = status !== "not_started";
-                const isCurrentMonth = product.month === currentMonth;
-
-                return (
-                  <div
-                    class={`
-                      group bg-gray-800 rounded-xl overflow-hidden transition-all duration-300
-                      ${isActive ? "hover:shadow-xl hover:shadow-black/50" : "opacity-75"}
-                      ${isCurrentMonth ? "ring-2 ring-emerald-500" : ""}
-                      border border-gray-700
-                      ${isOwned ? "cursor-pointer" : ""}
-                    `}
-                    data-project={
-                      isOwned
-                        ? JSON.stringify({
-                            ...product,
-                            month: product.month,
-                          })
-                        : undefined
-                    }
+              isOwned && (
+                <button
+                  type="button"
+                  class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                  id="newBetButton"
+                >
+                  <svg
+                    class="w-4 h-4 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    {/* Thumbnail or Placeholder */}
-                    <div class="relative aspect-video bg-gray-900">
-                      {product.thumbnail_url ? (
-                        <img
-                          src={product.thumbnail_url}
-                          alt={product.title}
-                          class="w-full h-full object-cover"
-                          loading="lazy"
-                          onerror="this.onerror=null; this.src='https://placehold.co/600x400/1f2937/475569?text=No+Image'"
-                        />
-                      ) : (
-                        <div class="absolute inset-0 flex items-center justify-center">
-                          <span class="text-gray-500 flex flex-col items-center gap-2">
-                            {status === "not_started" ? (
-                              <>
-                                <span class="text-2xl">🚀</span>
-                                <span class="text-sm">Coming Soon</span>
-                              </>
-                            ) : (
-                              <>
-                                <span class="text-2xl">🏗️</span>
-                                <span class="text-sm">Building</span>
-                              </>
-                            )}
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  New Bet
+                </button>
+              )
+            }
+          </div>
+          {
+            products && products.length > 0 ? (
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {products.map((product: Product) => {
+                  const status = product.status || "not_started";
+                  const statusConfig = getStatusConfig(status);
+                  const motivationConfig = getMotivationConfig(product.motivation);
+                  const startedDate = formatDate(product.started_at || product.created_at);
+                  const deadlineDate = formatDate(product.deadline);
+
+                  return (
+                    <div
+                      class={`
+                        group bg-gray-800 rounded-xl overflow-hidden transition-all duration-300
+                        hover:shadow-xl hover:shadow-black/50
+                        border border-gray-700
+                        ${isOwned ? "cursor-pointer" : ""}
+                      `}
+                      data-project={
+                        isOwned
+                          ? JSON.stringify({
+                              ...product,
+                              started_at: product.started_at,
+                              deadline: product.deadline,
+                              motivation: product.motivation,
+                            })
+                          : undefined
+                      }
+                    >
+                      {/* Thumbnail or Placeholder */}
+                      <div class="relative aspect-video bg-gray-900">
+                        {product.thumbnail_url ? (
+                          <img
+                            src={product.thumbnail_url}
+                            alt={product.title}
+                            class="w-full h-full object-cover"
+                            loading="lazy"
+                            onerror="this.onerror=null; this.src='https://placehold.co/600x400/1f2937/475569?text=No+Image'"
+                          />
+                        ) : (
+                          <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-gray-500 flex flex-col items-center gap-2">
+                              {status === "completed" ? (
+                                <>
+                                  <span class="text-2xl">&#x2705;</span>
+                                  <span class="text-sm">Shipped</span>
+                                </>
+                              ) : status === "in_progress" ? (
+                                <>
+                                  <span class="text-2xl">&#x1F3D7;&#xFE0F;</span>
+                                  <span class="text-sm">Building</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span class="text-2xl">&#x1F680;</span>
+                                  <span class="text-sm">Planned</span>
+                                </>
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        <div class="absolute top-4 right-4 flex gap-2">
+                          {motivationConfig && (
+                            <span
+                              class={`px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur-md border ${motivationConfig.bgColor} ${motivationConfig.color}`}
+                            >
+                              {motivationConfig.label}
+                            </span>
+                          )}
+                          <span
+                            class={`px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur-md border border-gray-700/50 ${statusConfig.bgColor} ${statusConfig.textColor}`}
+                          >
+                            {statusConfig.label}
                           </span>
                         </div>
-                      )}
-                      <div class="absolute top-4 right-4 flex gap-2">
-                        <span
-                          class={`
-                            px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur-md
-                            ${
-                              isCurrentMonth
-                                ? "bg-emerald-900/90 text-emerald-200 border border-emerald-700/50"
-                                : isActive
-                                  ? "bg-emerald-900/90 text-emerald-200 border border-emerald-700/50"
-                                  : "bg-gray-900/90 text-gray-300 border border-gray-700/50"
-                            }
-                          `}
-                        >
-                          {product.month}
-                        </span>
                         {isOwned && (
                           <button
                             type="button"
-                            class="p-1 bg-gray-800/90 backdrop-blur-md rounded-full text-gray-400 hover:text-gray-200 shadow-sm hover:shadow transition-all border border-gray-700/50"
-                            title="Edit Project"
+                            class="absolute top-4 left-4 p-1 bg-gray-800/90 backdrop-blur-md rounded-full text-gray-400 hover:text-gray-200 shadow-sm hover:shadow transition-all border border-gray-700/50"
+                            title="Edit Bet"
                             data-project={JSON.stringify({
                               ...product,
-                              month: product.month,
+                              started_at: product.started_at,
+                              deadline: product.deadline,
+                              motivation: product.motivation,
                             })}
                           >
                             <svg
@@ -785,66 +722,68 @@ const jsonLd = {
                           </button>
                         )}
                       </div>
-                    </div>
 
-                    <div class="p-6">
-                      {/* Status Badge */}
-                      <div class="flex items-center gap-2 mb-4">
-                        <div
-                          class={`w-2 h-2 rounded-full ${
-                            status === "completed"
-                              ? "bg-emerald-500"
-                              : status === "in_progress"
-                                ? "bg-amber-500"
-                                : "bg-gray-600"
-                          }`}
-                        />
-                        <span
-                          class={`text-xs font-medium ${
-                            status === "completed"
-                              ? "text-emerald-400"
-                              : status === "in_progress"
-                                ? "text-amber-400"
-                                : "text-gray-400"
-                          }`}
-                        >
-                          {getStatusConfig(status).label}
-                        </span>
-                      </div>
-
-                      {/* Title and Description */}
-                      <h3
-                        class={`
-                          text-xl font-semibold mb-2 transition-colors line-clamp-2
-                          ${isActive ? "text-white" : "text-gray-500"}
-                        `}
-                      >
-                        {product.title}
-                      </h3>
-                      {product.description && (
-                        <p class="text-gray-400 text-sm mb-4 line-clamp-3">
-                          {product.description}
-                        </p>
-                      )}
-
-                      {/* Tech Stack Tags */}
-                      {product.tech_stack && product.tech_stack.length > 0 && (
-                        <div class="flex flex-wrap gap-2 mb-4">
-                          {product.tech_stack.map((tech) => (
-                            <span class="px-2 py-1 bg-gray-900/50 text-gray-300 rounded text-xs border border-gray-700">
-                              {tech}
-                            </span>
-                          ))}
+                      <div class="p-6">
+                        {/* Status Badge */}
+                        <div class="flex items-center gap-2 mb-4">
+                          <div
+                            class={`w-2 h-2 rounded-full ${statusConfig.dotColor}`}
+                          />
+                          <span
+                            class={`text-xs font-medium ${statusConfig.textColor}`}
+                          >
+                            {statusConfig.label}
+                          </span>
                         </div>
-                      )}
 
-                      {/* Action Links */}
-                      <div class="flex flex-wrap items-center gap-3 mt-4">
-                        {status === "completed" && (
-                          <>
+                        {/* Title and Description */}
+                        <h3 class="text-xl font-semibold mb-2 transition-colors text-white line-clamp-2">
+                          {product.title}
+                        </h3>
+                        {product.description && (
+                          <p class="text-gray-400 text-sm mb-4 line-clamp-2">
+                            {product.description}
+                          </p>
+                        )}
+
+                        {/* Tech Stack Tags */}
+                        {product.tech_stack && product.tech_stack.length > 0 && (
+                          <div class="flex flex-wrap gap-2 mb-4">
+                            {product.tech_stack.map((tech: string) => (
+                              <span class="px-2 py-1 bg-gray-900/50 text-gray-300 rounded text-xs border border-gray-700">
+                                {tech}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Dates */}
+                        <div class="flex flex-wrap items-center gap-3 text-xs text-gray-400 mb-4">
+                          {startedDate && (
+                            <span class="inline-flex items-center gap-1">
+                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              Started {startedDate}
+                            </span>
+                          )}
+                          {deadlineDate && (
+                            <span class="inline-flex items-center gap-1">
+                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Due {deadlineDate}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Action Links */}
+                        <div class="flex flex-wrap items-center gap-3 mt-4">
+                          {product.slug && (
                             <a
                               href={`/projects/${product.slug}`}
                               class="inline-flex items-center text-sm font-medium text-emerald-400 hover:text-emerald-300"
+                              onclick="event.stopPropagation()"
                             >
                               View Details
                               <svg
@@ -859,97 +798,147 @@ const jsonLd = {
                                 />
                               </svg>
                             </a>
-                            {product.github_url && (
-                              <a
-                                href={product.github_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="inline-flex items-center text-sm text-gray-400 hover:text-gray-300"
-                              >
-                                <svg
-                                  class="w-4 h-4 mr-1"
-                                  viewBox="0 0 24 24"
-                                  fill="currentColor"
-                                >
-                                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-                                </svg>
-                                Code
-                              </a>
-                            )}
-                            {product.demo_url && (
-                              <a
-                                href={product.demo_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="inline-flex items-center text-sm text-gray-400 hover:text-gray-300"
-                              >
-                                <svg
-                                  class="w-4 h-4 mr-1"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                  />
-                                  <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                  />
-                                </svg>
-                                Demo
-                              </a>
-                            )}
-                          </>
-                        )}
-                        {status === "in_progress" && (
-                          <span class="inline-flex items-center text-sm font-medium text-amber-400">
-                            <svg
-                              class="w-4 h-4 mr-1.5 animate-spin"
-                              viewBox="0 0 24 24"
-                              fill="none"
+                          )}
+                          {product.github_url && (
+                            <a
+                              href={product.github_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="inline-flex items-center text-sm text-gray-400 hover:text-gray-300"
+                              onclick="event.stopPropagation()"
                             >
-                              <circle
-                                class="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                stroke-width="4"
-                              />
-                              <path
-                                class="opacity-75"
+                              <svg
+                                class="w-4 h-4 mr-1"
+                                viewBox="0 0 24 24"
                                 fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              />
-                            </svg>
-                            Building
-                          </span>
+                              >
+                                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                              </svg>
+                              Code
+                            </a>
+                          )}
+                          {product.demo_url && (
+                            <a
+                              href={product.demo_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="inline-flex items-center text-sm text-gray-400 hover:text-gray-300"
+                              onclick="event.stopPropagation()"
+                            >
+                              <svg
+                                class="w-4 h-4 mr-1"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                />
+                              </svg>
+                              Demo
+                            </a>
+                          )}
+                          {status === "in_progress" && !product.slug && !product.github_url && !product.demo_url && (
+                            <span class="inline-flex items-center text-sm font-medium text-amber-400">
+                              <svg
+                                class="w-4 h-4 mr-1.5 animate-spin"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                              >
+                                <circle
+                                  class="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  stroke-width="4"
+                                />
+                                <path
+                                  class="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                />
+                              </svg>
+                              Building
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Lessons Learned - Only show for completed projects */}
+                        {status === "completed" && product.lessons_learned && (
+                          <div class="mt-4 pt-4 border-t border-gray-700">
+                            <h4 class="text-sm font-medium text-white mb-2">
+                              Lessons Learned
+                            </h4>
+                            <p class="text-sm text-gray-400 italic line-clamp-3">
+                              "{product.lessons_learned}"
+                            </p>
+                          </div>
                         )}
                       </div>
-
-                      {/* Lessons Learned - Only show for completed projects */}
-                      {status === "completed" && product.lessons_learned && (
-                        <div class="mt-4 pt-4 border-t border-gray-700">
-                          <h4 class="text-sm font-medium text-white mb-2">
-                            Lessons Learned
-                          </h4>
-                          <p class="text-sm text-gray-400 italic line-clamp-3">
-                            "{product.lessons_learned}"
-                          </p>
-                        </div>
-                      )}
                     </div>
-                  </div>
-                );
-              })
-            }
-          </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-12 border border-gray-700/50 text-center">
+                <div class="mx-auto w-16 h-16 mb-4 rounded-full bg-gray-700/50 flex items-center justify-center">
+                  <svg
+                    class="w-8 h-8 text-gray-500"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-300 mb-2">
+                  No Bets Yet
+                </h3>
+                <p class="text-gray-400 max-w-sm mx-auto">
+                  {isOwned
+                    ? "Ready to bet on yourself? Place your first bet and start building in public."
+                    : `${profile?.full_name || username} hasn't placed any bets yet. Check back later!`}
+                </p>
+                {isOwned && (
+                  <button
+                    type="button"
+                    id="firstBetButton"
+                    class="mt-6 inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    Place Your First Bet
+                  </button>
+                )}
+              </div>
+            )
+          }
         </div>
       </div>
     </main>
@@ -961,6 +950,7 @@ const jsonLd = {
   // Initialize modal functionality
   document.addEventListener("DOMContentLoaded", () => {
     const shareButton = document.getElementById("shareUpdateButton");
+    const shareButton2 = document.getElementById("shareUpdateButton2");
     const modal = document.getElementById("shareUpdateModal");
 
     if (shareButton && modal) {
@@ -969,7 +959,31 @@ const jsonLd = {
       });
     }
 
-    // Add click handlers for project buttons in timeline
+    if (shareButton2 && modal) {
+      shareButton2.addEventListener("click", () => {
+        modal.classList.remove("hidden");
+      });
+    }
+
+    // New Bet button opens project modal with empty data
+    const newBetButton = document.getElementById("newBetButton");
+    if (newBetButton) {
+      newBetButton.addEventListener("click", () => {
+        // @ts-ignore
+        window.showProjectModal?.({});
+      });
+    }
+
+    // First Bet CTA button opens project modal with empty data
+    const firstBetButton = document.getElementById("firstBetButton");
+    if (firstBetButton) {
+      firstBetButton.addEventListener("click", () => {
+        // @ts-ignore
+        window.showProjectModal?.({});
+      });
+    }
+
+    // Add click handlers for project buttons (edit buttons on cards)
     document.querySelectorAll("button[data-project]").forEach((button) => {
       button.addEventListener("click", (e) => {
         e.stopPropagation(); // Prevent triggering parent card click

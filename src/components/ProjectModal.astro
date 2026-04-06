@@ -5,19 +5,22 @@ interface Props {
     id?: string;
     title?: string;
     description?: string;
-    status?: "completed" | "in_progress" | "not_started";
+    status?: "completed" | "in_progress" | "not_started" | "canceled" | "parked";
+    started_at?: string;
+    deadline?: string;
+    motivation?: "profit" | "impact" | "craft";
     github_url?: string;
     demo_url?: string;
     tech_stack?: string[];
     lessons_learned?: string;
     thumbnail_url?: string;
   };
-  month?: string;
 }
 
-const { profileId, project, month = "" } = Astro.props;
-const modalTitle = project?.id ? "Edit Project" : "New Project";
-const submitButtonText = project?.id ? "Save Changes" : "Create Project";
+const { profileId, project } = Astro.props;
+const modalTitle = project?.id ? "Edit Bet" : "New Bet";
+const submitButtonText = project?.id ? "Save Changes" : "Create Bet";
+const today = new Date().toISOString().split("T")[0];
 ---
 
 <div
@@ -29,8 +32,8 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
   >
     <div class="mt-3">
       <div class="flex justify-between items-center pb-3">
-        <h3 class="text-lg leading-6 font-medium text-white">
-          {modalTitle} - {month}
+        <h3 id="modalTitle" class="text-lg leading-6 font-medium text-white">
+          {modalTitle}
         </h3>
         <button
           id="closeProjectModal"
@@ -52,13 +55,12 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
       </div>
       <form id="projectForm" class="mt-2">
         <input type="hidden" name="profileId" value={profileId} />
-        <input type="hidden" name="month" value={month} />
         {project?.id && <input type="hidden" name="id" value={project.id} />}
 
         <div class="grid grid-cols-1 gap-6">
           <div>
             <label class="block text-sm font-medium text-gray-200 mb-2">
-              Project Title
+              Title
             </label>
             <input
               type="text"
@@ -69,17 +71,29 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
             />
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-200 mb-2">
-              Description
-            </label>
-            <textarea
-              name="description"
-              rows="3"
-              class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
-              placeholder="What are you building?"
-              required>{project?.description}</textarea
-            >
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-200 mb-2">
+                Started
+              </label>
+              <input
+                type="date"
+                name="started_at"
+                value={project?.started_at || today}
+                class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-200 mb-2">
+                Deadline (optional)
+              </label>
+              <input
+                type="date"
+                name="deadline"
+                value={project?.deadline}
+                class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              />
+            </div>
           </div>
 
           <div>
@@ -103,7 +117,76 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
                 value="completed"
                 selected={project?.status === "completed"}>Completed</option
               >
+              <option
+                value="canceled"
+                selected={project?.status === "canceled"}>Canceled</option
+              >
+              <option
+                value="parked"
+                selected={project?.status === "parked"}>Parked</option
+              >
             </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-200 mb-2">
+              Motivation
+            </label>
+            <div class="grid grid-cols-3 gap-3">
+              <label class="cursor-pointer">
+                <input
+                  type="radio"
+                  name="motivation"
+                  value="profit"
+                  class="sr-only peer"
+                  checked={project?.motivation === "profit"}
+                />
+                <div class="text-center py-2 px-3 rounded-lg border border-gray-700 bg-gray-900 text-sm text-gray-400 peer-checked:border-emerald-500 peer-checked:bg-emerald-900/30 peer-checked:text-emerald-400 hover:border-gray-600 transition-colors">
+                  For Profit
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input
+                  type="radio"
+                  name="motivation"
+                  value="impact"
+                  class="sr-only peer"
+                  checked={project?.motivation === "impact"}
+                />
+                <div class="text-center py-2 px-3 rounded-lg border border-gray-700 bg-gray-900 text-sm text-gray-400 peer-checked:border-blue-500 peer-checked:bg-blue-900/30 peer-checked:text-blue-400 hover:border-gray-600 transition-colors">
+                  For Impact
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input
+                  type="radio"
+                  name="motivation"
+                  value="craft"
+                  class="sr-only peer"
+                  checked={project?.motivation === "craft"}
+                />
+                <div class="text-center py-2 px-3 rounded-lg border border-gray-700 bg-gray-900 text-sm text-gray-400 peer-checked:border-purple-500 peer-checked:bg-purple-900/30 peer-checked:text-purple-400 hover:border-gray-600 transition-colors">
+                  For Craft
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <div id="narrativePrompt" class="p-3 rounded-lg bg-gray-900/50 border border-gray-700/50 mb-2">
+              <p class="text-sm text-emerald-400 font-medium" id="promptTitle">What's your thesis?</p>
+              <p class="text-xs text-gray-400" id="promptHint">Who is this for and why do you believe it will work?</p>
+            </div>
+            <label class="block text-sm font-medium text-gray-200 mb-2">
+              Description
+            </label>
+            <textarea
+              name="description"
+              rows="3"
+              class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              placeholder="What are you building and why?"
+              required>{project?.description}</textarea
+            >
           </div>
 
           <div class="grid grid-cols-2 gap-4">
@@ -155,7 +238,7 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
               name="lessons_learned"
               rows="3"
               class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg shadow-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
-              placeholder="What did you learn from this project?"
+              placeholder="What did you learn from this bet?"
               >{project?.lessons_learned}</textarea
             >
           </div>
@@ -285,6 +368,59 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
   ) as HTMLButtonElement;
   const submitButtonText = document.getElementById("submitButtonText");
   const submitSpinner = document.getElementById("submitSpinner");
+  const modalTitleEl = document.getElementById("modalTitle");
+  const promptTitle = document.getElementById("promptTitle");
+  const promptHint = document.getElementById("promptHint");
+  const statusSelect = projectForm?.querySelector(
+    '[name="status"]'
+  ) as HTMLSelectElement;
+
+  const prompts: Record<string, Record<string, { title: string; hint: string }>> = {
+    not_started: {
+      profit: { title: "Who's your customer?", hint: "What problem are you solving for them?" },
+      impact: { title: "Who does this help?", hint: "Why does this matter to you?" },
+      craft: { title: "What are you building?", hint: "What inspired this? What are you trying to learn?" },
+      default: { title: "What's your thesis?", hint: "Who is this for and why do you believe it will work?" },
+    },
+    in_progress: {
+      profit: { title: "What did you ship?", hint: "What blocked you? What's next?" },
+      impact: { title: "What did you build?", hint: "Who's using it? What feedback are you hearing?" },
+      craft: { title: "What's working?", hint: "What's been the most fun or surprising part?" },
+      default: { title: "How's it going?", hint: "What shipped? What blocked? What's next?" },
+    },
+    completed: {
+      profit: { title: "Did it work?", hint: "What did the numbers say? Would you make this bet again?" },
+      impact: { title: "What impact did it have?", hint: "How are people using it? What changed?" },
+      craft: { title: "What are you most proud of?", hint: "What was hardest? What did you learn?" },
+      default: { title: "What happened?", hint: "What did you learn? Would you make this bet again?" },
+    },
+    canceled: {
+      profit: { title: "Why did you stop?", hint: "What signal told you it wasn't working?" },
+      impact: { title: "What didn't work?", hint: "What would you do differently?" },
+      craft: { title: "What got in the way?", hint: "Was it the wrong time, or the wrong bet?" },
+      default: { title: "Why did you cancel?", hint: "What did you learn from walking away?" },
+    },
+    parked: {
+      profit: { title: "Why pause now?", hint: "What would need to change for you to pick it back up?" },
+      impact: { title: "What made you pause?", hint: "Is the need still there?" },
+      craft: { title: "What's on hold?", hint: "What would pull you back in?" },
+      default: { title: "Why park this bet?", hint: "What would need to change for you to resume?" },
+    },
+  };
+
+  function updateNarrativePrompt() {
+    const status = statusSelect?.value || "not_started";
+    const motivationRadio = projectForm?.querySelector(
+      'input[name="motivation"]:checked'
+    ) as HTMLInputElement | null;
+    const motivation = motivationRadio?.value || "default";
+
+    const statusPrompts = prompts[status] || prompts.not_started;
+    const prompt = statusPrompts[motivation] || statusPrompts.default;
+
+    if (promptTitle) promptTitle.textContent = prompt.title;
+    if (promptHint) promptHint.textContent = prompt.hint;
+  }
 
   function setLoading(
     isLoading: boolean,
@@ -295,10 +431,10 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
       submitSpinner.classList.toggle("hidden", !isLoading);
       if (isLoading) {
         submitButtonText.textContent =
-          action === "create" ? "Creating..." : "Updating...";
+          action === "create" ? "Creating..." : "Saving...";
       } else {
         submitButtonText.textContent =
-          action === "create" ? "Create Project" : "Update Project";
+          action === "create" ? "Create Bet" : "Save Changes";
       }
     }
   }
@@ -309,10 +445,19 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
 
   function hideModal() {
     modal?.classList.add("hidden");
-    // Reset form and loading state when hiding
     projectForm?.reset();
     setLoading(false);
   }
+
+  // Listen for status and motivation changes to update narrative prompt
+  statusSelect?.addEventListener("change", updateNarrativePrompt);
+
+  const motivationRadios = projectForm?.querySelectorAll(
+    'input[name="motivation"]'
+  );
+  motivationRadios?.forEach((radio) => {
+    radio.addEventListener("change", updateNarrativePrompt);
+  });
 
   // Function to show modal for editing
   window.showProjectModal = (projectData) => {
@@ -341,8 +486,11 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
       const thumbnailInput = projectForm.querySelector(
         '[name="thumbnail_url"]'
       ) as HTMLInputElement;
-      const monthInput = projectForm.querySelector(
-        '[name="month"]'
+      const startedAtInput = projectForm.querySelector(
+        '[name="started_at"]'
+      ) as HTMLInputElement;
+      const deadlineInput = projectForm.querySelector(
+        '[name="deadline"]'
       ) as HTMLInputElement;
 
       // Create or update id input
@@ -359,8 +507,10 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
       if (projectData.id) {
         idInput.value = projectData.id;
         setLoading(false, "update");
+        if (modalTitleEl) modalTitleEl.textContent = "Edit Bet";
       } else {
         setLoading(false, "create");
+        if (modalTitleEl) modalTitleEl.textContent = "New Bet";
       }
 
       if (titleInput) titleInput.value = projectData.title || "";
@@ -376,7 +526,26 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
         lessonsTextarea.value = projectData.lessons_learned || "";
       if (thumbnailInput)
         thumbnailInput.value = projectData.thumbnail_url || "";
-      if (monthInput) monthInput.value = projectData.month;
+      if (startedAtInput)
+        startedAtInput.value = projectData.started_at || new Date().toISOString().split("T")[0];
+      if (deadlineInput)
+        deadlineInput.value = projectData.deadline || "";
+
+      // Set motivation radio
+      if (projectData.motivation) {
+        const motivationRadio = projectForm.querySelector(
+          `input[name="motivation"][value="${projectData.motivation}"]`
+        ) as HTMLInputElement | null;
+        if (motivationRadio) motivationRadio.checked = true;
+      } else {
+        // Uncheck all motivation radios if none set
+        const allRadios = projectForm.querySelectorAll(
+          'input[name="motivation"]'
+        ) as NodeListOf<HTMLInputElement>;
+        allRadios.forEach((r) => (r.checked = false));
+      }
+
+      updateNarrativePrompt();
     }
     showModal();
   };
@@ -399,16 +568,21 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
     data.tech_stack = techStackString
       ? techStackString
           .split(",")
-          .map((tech) => tech.trim())
+          .map((tech: string) => tech.trim())
           .filter(Boolean)
       : [];
 
     // Remove empty optional fields
-    ["github_url", "demo_url", "lessons_learned", "thumbnail_url"].forEach(
-      (field) => {
-        if (!data[field]) delete data[field];
-      }
-    );
+    [
+      "github_url",
+      "demo_url",
+      "lessons_learned",
+      "thumbnail_url",
+      "deadline",
+      "motivation",
+    ].forEach((field) => {
+      if (!data[field]) delete data[field];
+    });
 
     const isEdit = !!data.id;
     const endpoint = isEdit ? `/api/projects/${data.id}` : "/api/projects";
@@ -432,11 +606,10 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
         const errorData = await response.json();
         throw new Error(
           errorData.error ||
-            (isEdit ? "Failed to update project" : "Failed to create project")
+            (isEdit ? "Failed to update bet" : "Failed to create bet")
         );
       }
     } catch (error: unknown) {
-      console.error("Error:", error);
       if (error instanceof Error) {
         alert(error.message);
       } else {
@@ -534,7 +707,6 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
         }
       }
     } catch (error) {
-      console.error("Error uploading thumbnail:", error);
       alert(error instanceof Error ? error.message : "Failed to upload image");
     } finally {
       setUploadingState(false);
@@ -542,6 +714,9 @@ const submitButtonText = project?.id ? "Save Changes" : "Create Project";
       target.value = "";
     }
   });
+
+  // Initialize narrative prompt on load
+  updateNarrativePrompt();
 
   // Declare the showProjectModal function type for TypeScript
   declare global {

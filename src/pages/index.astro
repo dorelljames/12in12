@@ -35,9 +35,9 @@ const { data: latestProjects } = await supabase
   .limit(6);
 
 // Prepare SEO metadata
-const title = "12 in 12 - Build 12 Products in 12 Months";
+const title = "12 in 12 - Bet on Yourself as a Builder";
 const description =
-  "Join a community of makers building and shipping 12 products in 12 months. Share your journey, get feedback, and stay accountable.";
+  "Join a community of builders betting on themselves. Ship 12 bets in 12 months, share your journey, get feedback, and stay accountable.";
 
 // Prepare JSON-LD structured data
 const jsonLd = {
@@ -56,9 +56,9 @@ const jsonLd = {
   },
   about: {
     "@type": "Thing",
-    name: "12 Products in 12 Months Challenge",
+    name: "12 Bets in 12 Months Challenge",
     description:
-      "A community challenge to build and ship one product every month for a year",
+      "A community challenge to bet on yourself and ship one project every month for a year",
   },
   ...(latestProjects?.length && {
     hasPart: {
@@ -129,8 +129,8 @@ const jsonLd = {
             Building This Month
           </h2>
           <p class="text-lg text-slate-300">
-            Check out what our builders are working on in {currentMonth} or last
-            month's projects in <a
+            Check out what our builders are betting on in {currentMonth} or last
+            month's bets in <a
               href={`/projects?month=${lastMonth}`}
               class="text-primary-400 hover:text-primary-500"
             >
@@ -288,10 +288,10 @@ const jsonLd = {
             <div class="text-center py-12 bg-slate-800/50 rounded-2xl border border-slate-700">
               <div class="text-4xl mb-4">🌱</div>
               <h3 class="text-lg font-medium text-slate-200 mb-2">
-                No Active Projects Yet
+                No Active Bets Yet
               </h3>
               <p class="text-slate-300">
-                Be the first to start building this month!
+                Be the first to place a bet this month!
               </p>
             </div>
           )
@@ -303,7 +303,7 @@ const jsonLd = {
             href="/projects"
             class="inline-flex items-center gap-2 px-8 py-3 text-base font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-primary-900/50"
           >
-            View All Projects
+            View All Bets
             <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
               <path
                 fill-rule="evenodd"
