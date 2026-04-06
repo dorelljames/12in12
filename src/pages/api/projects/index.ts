@@ -36,6 +36,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       description,
       status,
       month,
+      started_at,
+      deadline,
+      motivation,
       profileId,
       github_url,
       demo_url,
@@ -64,21 +67,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
-    // Check if a project already exists for this month
-    const { data: existingProject } = await supabase
-      .from("products")
-      .select("id")
-      .eq("profile_id", profileId)
-      .eq("month", month)
-      .single();
-
-    if (existingProject) {
-      return new Response(
-        JSON.stringify({ error: "A project already exists for this month" }),
-        { status: 400 }
-      );
-    }
-
     // Generate base slug from title
     const baseSlug = generateSlug(title);
 
@@ -102,7 +90,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
           title,
           description,
           status,
-          month,
+          month: month || null,
+          started_at: started_at || new Date().toISOString(),
+          deadline: deadline || null,
+          motivation: motivation || null,
           profile_id: profileId,
           github_url: github_url || null,
           demo_url: demo_url || null,

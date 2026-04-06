@@ -37,6 +37,9 @@ export const PUT: APIRoute = async ({ request, cookies, params }) => {
       title,
       description,
       status,
+      started_at,
+      deadline,
+      motivation,
       github_url,
       demo_url,
       tech_stack,
@@ -101,12 +104,15 @@ export const PUT: APIRoute = async ({ request, cookies, params }) => {
         title,
         description,
         status,
+        ...(started_at !== undefined && { started_at }),
+        ...(deadline !== undefined && { deadline }),
+        ...(motivation !== undefined && { motivation: motivation || null }),
         github_url: github_url || null,
         demo_url: demo_url || null,
         tech_stack: Array.isArray(tech_stack) ? tech_stack : [],
         lessons_learned: lessons_learned || null,
         thumbnail_url: thumbnail_url || null,
-        ...(slug && { slug }), // Only include slug if it was updated
+        ...(slug && { slug }),
       })
       .eq("id", id)
       .select()
