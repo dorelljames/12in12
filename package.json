@@ -7,7 +7,9 @@
     "build": "astro build",
     "deploy": "astro build && wrangler deploy -c dist/server/wrangler.json",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^13.1.7",
@@ -20,6 +22,7 @@
   },
   "devDependencies": {
     "@types/canvas-confetti": "^1.9.0",
+    "vitest": "^4.1.2",
     "wrangler": "^4.80.0"
   },
   "pnpm": {

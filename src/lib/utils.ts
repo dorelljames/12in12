@@ -1,4 +1,14 @@
 /**
+ * Normalizes an email address by removing the + suffix from the local part.
+ * e.g. "user+tag@example.com" -> "user@example.com"
+ */
+export function normalizeEmail(email: string): string {
+  const [localPart, domain] = email.split("@");
+  const normalizedLocal = localPart.split("+")[0];
+  return `${normalizedLocal}@${domain}`;
+}
+
+/**
  * Generates a URL-friendly slug from a string
  * @param text The text to convert to a slug
  * @returns A URL-friendly slug

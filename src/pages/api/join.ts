@@ -1,17 +1,11 @@
 import type { APIRoute } from "astro";
 import { Client } from "@notionhq/client";
 import { supabaseAdmin as supabase } from "../../lib/supabase";
+import { normalizeEmail } from "../../lib/utils";
 import {
   PUBLIC_NOTION_TOKEN,
   PUBLIC_NOTION_DATABASE_ID,
 } from "astro:env/server";
-
-// Function to normalize email addresses by removing + suffix
-function normalizeEmail(email: string): string {
-  const [localPart, domain] = email.split("@");
-  const normalizedLocal = localPart.split("+")[0];
-  return `${normalizedLocal}@${domain}`;
-}
 
 const notion = new Client({
   auth: PUBLIC_NOTION_TOKEN,

@@ -12,9 +12,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 pnpm dev          # Dev server on http://localhost:1234
 pnpm build        # Production build (Cloudflare Workers output)
 pnpm preview      # Preview production build locally
+pnpm test         # Run tests once
+pnpm test:watch   # Run tests in watch mode
 ```
 
-No test runner or linter is configured.
+Tests use Vitest. Test files live next to the code they test (`*.test.ts`). No linter is configured.
 
 ## Tech Stack
 
