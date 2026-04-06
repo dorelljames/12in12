@@ -84,9 +84,10 @@ const description = "See what builders are shipping, learning, and launching in 
     <link rel="canonical" href={new URL("/feed", Astro.url.origin).toString()} />
   </head>
 
+  <div class="min-h-screen flex flex-col">
   <Navbar />
 
-  <main class="bg-gray-900 pt-24 pb-16 min-h-screen">
+  <main class="flex-1 bg-gray-900 pt-24 pb-16">
     <div class="container mx-auto px-4 max-w-2xl">
       <div class="text-center mb-12">
         <h1 class="text-3xl font-bold text-white mb-2">Community Feed</h1>
@@ -175,4 +176,5 @@ const description = "See what builders are shipping, learning, and launching in 
   </main>
 
   <Footer />
+  </div>
 </Layout>

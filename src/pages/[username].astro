@@ -621,273 +621,97 @@ const jsonLd = {
           </div>
           {
             products && products.length > 0 ? (
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {products.map((product: Product) => {
-                  const status = product.status || "not_started";
-                  const statusConfig = getStatusConfig(status);
-                  const motivationConfig = getMotivationConfig(product.motivation);
-                  const startedDate = formatDate(product.started_at || product.created_at);
-                  const deadlineDate = formatDate(product.deadline);
+              <div class="max-w-2xl mx-auto">
+                <div class="relative">
+                  {/* Vertical timeline line */}
+                  <div class="absolute left-[19px] top-0 bottom-0 w-px bg-gray-700"></div>
 
-                  return (
-                    <div
-                      class={`
-                        group bg-gray-800 rounded-xl overflow-hidden transition-all duration-300
-                        hover:shadow-xl hover:shadow-black/50
-                        border border-gray-700
-                        ${isOwned ? "cursor-pointer" : ""}
-                      `}
-                      data-project={
-                        isOwned
-                          ? JSON.stringify({
-                              ...product,
-                              started_at: product.started_at,
-                              deadline: product.deadline,
-                              motivation: product.motivation,
-                            })
-                          : undefined
-                      }
-                    >
-                      {/* Thumbnail or Placeholder */}
-                      <div class="relative aspect-video bg-gray-900">
-                        {product.thumbnail_url ? (
-                          <img
-                            src={product.thumbnail_url}
-                            alt={product.title}
-                            class="w-full h-full object-cover"
-                            loading="lazy"
-                            onerror="this.onerror=null; this.src='https://placehold.co/600x400/1f2937/475569?text=No+Image'"
-                          />
-                        ) : (
-                          <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-gray-500 flex flex-col items-center gap-2">
-                              {status === "completed" ? (
-                                <>
-                                  <span class="text-2xl">&#x2705;</span>
-                                  <span class="text-sm">Shipped</span>
-                                </>
-                              ) : status === "in_progress" ? (
-                                <>
-                                  <span class="text-2xl">&#x1F3D7;&#xFE0F;</span>
-                                  <span class="text-sm">Building</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span class="text-2xl">&#x1F680;</span>
-                                  <span class="text-sm">Planned</span>
-                                </>
-                              )}
-                            </span>
+                  <div class="space-y-2">
+                    {products.map((product: Product) => {
+                      const status = product.status || "not_started";
+                      const statusConfig = getStatusConfig(status);
+                      const motivationConfig = getMotivationConfig(product.motivation);
+                      const date = new Date(product.started_at || product.created_at || "");
+                      const day = date.getDate();
+                      const monthYear = date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+
+                      return (
+                        <div
+                          class={`relative flex gap-4 py-3 group ${isOwned ? "cursor-pointer" : ""}`}
+                          data-project={isOwned ? JSON.stringify(product) : undefined}
+                        >
+                          {/* Day + dot */}
+                          <div class="flex items-start gap-2 shrink-0 w-10">
+                            <span class="text-xs font-mono text-gray-500 w-5 text-right pt-1">{day}</span>
+                            <div class={`w-2.5 h-2.5 rounded-full mt-1.5 ring-4 ring-gray-800 ${statusConfig.dotColor}`}></div>
                           </div>
-                        )}
-                        <div class="absolute top-4 right-4 flex gap-2">
-                          {motivationConfig && (
-                            <span
-                              class={`px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur-md border ${motivationConfig.bgColor} ${motivationConfig.color}`}
-                            >
-                              {motivationConfig.label}
-                            </span>
-                          )}
-                          <span
-                            class={`px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur-md border border-gray-700/50 ${statusConfig.bgColor} ${statusConfig.textColor}`}
-                          >
-                            {statusConfig.label}
-                          </span>
-                        </div>
-                        {isOwned && (
-                          <button
-                            type="button"
-                            class="absolute top-4 left-4 p-1 bg-gray-800/90 backdrop-blur-md rounded-full text-gray-400 hover:text-gray-200 shadow-sm hover:shadow transition-all border border-gray-700/50"
-                            title="Edit Bet"
-                            data-project={JSON.stringify({
-                              ...product,
-                              started_at: product.started_at,
-                              deadline: product.deadline,
-                              motivation: product.motivation,
-                            })}
-                          >
-                            <svg
-                              class="w-4 h-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                              />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
 
-                      <div class="p-6">
-                        {/* Status Badge */}
-                        <div class="flex items-center gap-2 mb-4">
-                          <div
-                            class={`w-2 h-2 rounded-full ${statusConfig.dotColor}`}
-                          />
-                          <span
-                            class={`text-xs font-medium ${statusConfig.textColor}`}
-                          >
-                            {statusConfig.label}
-                          </span>
-                        </div>
-
-                        {/* Title and Description */}
-                        <h3 class="text-xl font-semibold mb-2 transition-colors text-white line-clamp-2">
-                          {product.title}
-                        </h3>
-                        {product.description && (
-                          <p class="text-gray-400 text-sm mb-4 line-clamp-2">
-                            {product.description}
-                          </p>
-                        )}
-
-                        {/* Tech Stack Tags */}
-                        {product.tech_stack && product.tech_stack.length > 0 && (
-                          <div class="flex flex-wrap gap-2 mb-4">
-                            {product.tech_stack.map((tech: string) => (
-                              <span class="px-2 py-1 bg-gray-900/50 text-gray-300 rounded text-xs border border-gray-700">
-                                {tech}
+                          {/* Content */}
+                          <div class="flex-1 min-w-0 pb-4 border-b border-gray-700/50 group-last:border-0">
+                            {/* Header row */}
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                              <h3 class="text-base font-semibold text-white">
+                                {product.slug ? (
+                                  <a href={`/projects/${product.slug}`} class="hover:text-emerald-400 transition-colors" onclick="event.stopPropagation()">
+                                    {product.title}
+                                  </a>
+                                ) : product.title}
+                              </h3>
+                              <span class={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border border-gray-700/50 ${statusConfig.bgColor} ${statusConfig.textColor}`}>
+                                <span class={`w-1.5 h-1.5 rounded-full ${statusConfig.dotColor}`}></span>
+                                {statusConfig.label}
                               </span>
-                            ))}
+                              {motivationConfig && (
+                                <span class={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${motivationConfig.bgColor} ${motivationConfig.color}`}>
+                                  {motivationConfig.label}
+                                </span>
+                              )}
+                              <span class="text-xs text-gray-600 ml-auto">{monthYear}</span>
+                            </div>
+
+                            {/* Description */}
+                            {product.description && (
+                              <p class="text-sm text-gray-400 line-clamp-2 mb-2">{product.description}</p>
+                            )}
+
+                            {/* Tech stack + links row */}
+                            <div class="flex items-center gap-2 flex-wrap">
+                              {product.tech_stack && product.tech_stack.length > 0 && (
+                                product.tech_stack.slice(0, 4).map((tech: string) => (
+                                  <span class="px-1.5 py-0.5 bg-gray-900/50 text-gray-400 rounded text-[10px] border border-gray-700/50">{tech}</span>
+                                ))
+                              )}
+                              {product.tech_stack && product.tech_stack.length > 4 && (
+                                <span class="text-[10px] text-gray-500">+{product.tech_stack.length - 4}</span>
+                              )}
+                              {product.github_url && (
+                                <a href={product.github_url} target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-300" onclick="event.stopPropagation()" title="Code">
+                                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                                </a>
+                              )}
+                              {product.demo_url && (
+                                <a href={product.demo_url} target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-300" onclick="event.stopPropagation()" title="Demo">
+                                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </a>
+                              )}
+                              {isOwned && (
+                                <button
+                                  type="button"
+                                  class="text-gray-600 hover:text-gray-300 ml-auto"
+                                  title="Edit Bet"
+                                  data-project={JSON.stringify(product)}
+                                  onclick="event.stopPropagation()"
+                                >
+                                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                              )}
+                            </div>
                           </div>
-                        )}
-
-                        {/* Dates */}
-                        <div class="flex flex-wrap items-center gap-3 text-xs text-gray-400 mb-4">
-                          {startedDate && (
-                            <span class="inline-flex items-center gap-1">
-                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              Started {startedDate}
-                            </span>
-                          )}
-                          {deadlineDate && (
-                            <span class="inline-flex items-center gap-1">
-                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              Due {deadlineDate}
-                            </span>
-                          )}
                         </div>
-
-                        {/* Action Links */}
-                        <div class="flex flex-wrap items-center gap-3 mt-4">
-                          {product.slug && (
-                            <a
-                              href={`/projects/${product.slug}`}
-                              class="inline-flex items-center text-sm font-medium text-emerald-400 hover:text-emerald-300"
-                              onclick="event.stopPropagation()"
-                            >
-                              View Details
-                              <svg
-                                class="w-4 h-4 ml-1"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path
-                                  fill-rule="evenodd"
-                                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                  clip-rule="evenodd"
-                                />
-                              </svg>
-                            </a>
-                          )}
-                          {product.github_url && (
-                            <a
-                              href={product.github_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              class="inline-flex items-center text-sm text-gray-400 hover:text-gray-300"
-                              onclick="event.stopPropagation()"
-                            >
-                              <svg
-                                class="w-4 h-4 mr-1"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                              >
-                                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-                              </svg>
-                              Code
-                            </a>
-                          )}
-                          {product.demo_url && (
-                            <a
-                              href={product.demo_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              class="inline-flex items-center text-sm text-gray-400 hover:text-gray-300"
-                              onclick="event.stopPropagation()"
-                            >
-                              <svg
-                                class="w-4 h-4 mr-1"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                />
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                />
-                              </svg>
-                              Demo
-                            </a>
-                          )}
-                          {status === "in_progress" && !product.slug && !product.github_url && !product.demo_url && (
-                            <span class="inline-flex items-center text-sm font-medium text-amber-400">
-                              <svg
-                                class="w-4 h-4 mr-1.5 animate-spin"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                              >
-                                <circle
-                                  class="opacity-25"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  stroke-width="4"
-                                />
-                                <path
-                                  class="opacity-75"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                />
-                              </svg>
-                              Building
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Lessons Learned - Only show for completed projects */}
-                        {status === "completed" && product.lessons_learned && (
-                          <div class="mt-4 pt-4 border-t border-gray-700">
-                            <h4 class="text-sm font-medium text-white mb-2">
-                              Lessons Learned
-                            </h4>
-                            <p class="text-sm text-gray-400 italic line-clamp-3">
-                              "{product.lessons_learned}"
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             ) : (
               <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-12 border border-gray-700/50 text-center">
