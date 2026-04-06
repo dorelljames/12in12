@@ -8,7 +8,7 @@ interface Props {
 
 const { name, email, username } = Astro.props;
 
-const DISCORD_INVITE_URL = import.meta.env.DISCORD_INVITE_URL || "#";
+import { DISCORD_INVITE_URL } from "astro:env/server";
 
 // Check if user is already verified
 const {

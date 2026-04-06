@@ -188,9 +188,6 @@ const { data: socialLinks, error: socialLinksError } = await supabase
   .eq("user_id", profile?.user_id)
   .order("platform");
 
-// Add this before the Layout component
-let editingUpdate: Update | undefined;
-
 // Prepare SEO metadata
 const title = `${profile?.full_name || username}'s Builder Journey - 12 in 12`;
 const description = profile?.bio
@@ -471,7 +468,7 @@ const jsonLd = {
               class="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6 mb-8"
             >
               <div class="flex items-center justify-between mb-4">
-                <h3 class="font-semibold text-white">2025 Progress</h3>
+                <h3 class="font-semibold text-white">{new Date().getFullYear()} Progress</h3>
                 <span class="text-sm text-gray-400"
                   >Current: {currentMonth}</span
                 >

@@ -1,6 +1,10 @@
 import type { APIRoute } from "astro";
 import { Client } from "@notionhq/client";
 import { supabaseAdmin as supabase } from "../../lib/supabase";
+import {
+  PUBLIC_NOTION_TOKEN,
+  PUBLIC_NOTION_DATABASE_ID,
+} from "astro:env/server";
 
 // Function to normalize email addresses by removing + suffix
 function normalizeEmail(email: string): string {
@@ -10,10 +14,10 @@ function normalizeEmail(email: string): string {
 }
 
 const notion = new Client({
-  auth: import.meta.env.PUBLIC_NOTION_TOKEN,
+  auth: PUBLIC_NOTION_TOKEN,
 });
 
-const DATABASE_ID = import.meta.env.PUBLIC_NOTION_DATABASE_ID;
+const DATABASE_ID = PUBLIC_NOTION_DATABASE_ID;
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -63,18 +67,33 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Check if user already exists in Supabase
-    const {
-      data: { users: existingUsers },
-      error: getUserError,
-    } = await supabase.auth.admin.listUsers();
-
-    // Normalize the input email
     const normalizedEmail = normalizeEmail(email!);
 
-    // Check for existing users with normalized email
-    const existingUser = existingUsers.find(
-      (user) => normalizeEmail(user.email || "") === normalizedEmail
-    );
+    // Check existing profiles by normalized email pattern
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", username)
+      .single();
+
+    if (existingProfile) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "This username is already taken.",
+        }),
+        { status: 400 }
+      );
+    }
+
+    // Try to find user by email via admin API
+    const {
+      data: { users: matchedUsers },
+      error: getUserError,
+    } = await supabase.auth.admin.listUsers({
+      filter: `email.eq.${normalizedEmail}`,
+      perPage: 1,
+    });
 
     if (getUserError) {
       return new Response(
@@ -82,13 +101,11 @@ export const POST: APIRoute = async ({ request }) => {
           success: false,
           error: "Failed to check user existence",
         }),
-        {
-          status: 500,
-        }
+        { status: 500 }
       );
     }
 
-    if (existingUser) {
+    if (matchedUsers && matchedUsers.length > 0) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -137,40 +154,44 @@ export const POST: APIRoute = async ({ request }) => {
       },
     });
 
-    // Let's create the supabase user
+    // Create the supabase user via OTP
+    const redirectUrl = import.meta.env.DEV
+      ? "http://localhost:1234/api/auth/confirm"
+      : "https://12in12.pro/api/auth/confirm";
+
     const { error } = await supabase.auth.signInWithOtp({
       email: email!,
       options: {
         shouldCreateUser: true,
-        emailRedirectTo: import.meta.env.DEV
-          ? "http://localhost:1234/api/auth/confirm"
-          : "https://12in12.pro/api/auth/confirm",
+        emailRedirectTo: redirectUrl,
       },
     });
 
     if (error) {
-      return new Response(error.message, { status: 500 });
+      return new Response(
+        JSON.stringify({ success: false, error: error.message }),
+        { status: 500 }
+      );
     }
 
-    // Get the user ID from the OTP signup - we need to list users again to get the newly created user
+    // Find the newly created user by email
     const {
-      data: { users: allUsers },
-    } = await supabase.auth.admin.listUsers();
+      data: { users: newUsers },
+      error: findError,
+    } = await supabase.auth.admin.listUsers({
+      filter: `email.eq.${email}`,
+      perPage: 1,
+    });
 
-    // Use normalized email to find the new user
-    const newUser = allUsers.find(
-      (user) => normalizeEmail(user.email || "") === normalizedEmail
-    );
+    const newUser = newUsers?.[0];
 
-    if (!newUser?.id) {
+    if (findError || !newUser?.id) {
       return new Response(
         JSON.stringify({
           success: false,
           error: "Failed to create user profile",
         }),
-        {
-          status: 500,
-        }
+        { status: 500 }
       );
     }
 

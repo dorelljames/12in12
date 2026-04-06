@@ -1,12 +1,5 @@
 ---
-import { createClient } from "@supabase/supabase-js";
-import { Image } from "astro:assets";
-
-// Initialize Supabase client
-const supabase = createClient(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-);
+import { supabase } from "../lib/supabase";
 
 const currentMonth = new Date().toLocaleString("default", { month: "long" });
 const { data: latestProjects } = await supabase
