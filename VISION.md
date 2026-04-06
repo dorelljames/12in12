@@ -8,20 +8,31 @@ The name "12 in 12" started as a challenge: build 12 products in 12 months. The 
 
 ## The Origin Story
 
-12in12 was born from building [hapsay.com](https://hapsay.com). During that journey, having friends to share the ups and downs with — the excitement of early interest, the grind of business registration, the lessons along the way — made all the difference. The realization: every builder deserves that support system, and every build journey is worth telling.
+12in12 launched with the "build 12 products in 12 months" pitch. Real builders showed up and joined. But over time, it died down — the strict pace was hard to sustain, and energy faded.
 
-After launching 12in12, real builders showed up. But feedback was clear: the strict 1-product-per-month pace was too rigid. Some couldn't sustain it. Others wanted in but felt intimidated by the commitment. The energy was there — the format needed to flex.
+Coming back to it now, the motivation is different. Building [hapsay.com](https://hapsay.com) created something solid — a real product with real traction that's worth sharing the journey of. But building is lonely. Having something to show is only half of it. The other half is having people to share it with, learn from, and build alongside.
+
+That's the real reason 12in12 is being revived: not just as a tracker, but as the community that makes building less lonely. Feedback from the original launch was clear — the 1-product-per-month pace was too rigid. Some couldn't sustain it. Others wanted in but felt intimidated. The energy was there. The format needed to flex.
 
 ## Core Beliefs
 
 ### Betting on yourself is the identity
-The word "bet" is intentional. It's not a side project, not a hobby, not a task on a kanban board. A bet says: "I believe this is worth my time, and I'm going to find out." That framing attracts builders who are serious about shipping, not just tinkering.
+The word "bet" is intentional. It's not a side project, not a hobby, not a task on a kanban board. A bet says: "I believe this is worth my time, and I'm going to find out." Betting on yourself doesn't mean betting on revenue — it means committing your time and skills to something you believe in. A builder shipping a free emergency hotline directory is betting just as hard as someone launching a SaaS. The stakes are always real: your time, your energy, your reputation.
 
 ### The journey is the product
 Nobody else shows the full arc of a builder's path — the thesis, the building, the shipping, the outcome, the lessons. Project trackers show status. 12in12 shows the story. That story is what other builders actually want to learn from.
 
 ### Flexible pace, not lower standards
 Removing the strict 12-month calendar isn't about making it easier. It's about being honest: great products don't fit neatly into calendar months. Builders set their own deadlines and commit publicly. The accountability comes from the community, not the calendar.
+
+### Three reasons to build
+Builders don't all build for the same reason, and the platform respects that. Every bet has a motivation:
+
+- **For Profit** — building a business, seeking customers and revenue. "I believe freelancers will pay for a simpler invoicing tool."
+- **For Impact** — solving a real problem for a community or cause. "I believe this emergency hotline directory will help people find help faster."
+- **For Craft** — building to learn, have fun, or push your skills. "I want to see if I can make a combat platformer with time-stop mechanics."
+
+Motivation can change — and when it does, that's part of the story. A hobby project becoming a real business is one of the most compelling narratives a builder can tell. The platform prompts that transition: "This started as a craft project and is now for profit. What changed?"
 
 ### Builders serving builders
 This is not a marketplace. This is not a Product Hunt alternative. The audience is other builders. The value is learning from each other's bets — what worked, what didn't, and why. Connecting builders' products to users may come later, but it's not the focus now.
@@ -34,7 +45,14 @@ AI tools are accelerating what builders can ship. But communities built around A
 ### 1. Bets, not projects
 **Decision:** Reframe "products/projects" as "bets" across the platform.
 
-**Why:** "Project" is neutral and passive. "Bet" carries intention — it implies a thesis, stakes, and an outcome. It filters for builders who are serious about finding out what works. It also naturally prompts the question "what are you betting on?" which is a better conversation starter than "what are you building?"
+**Why:** "Project" is neutral and passive. "Bet" carries intention — it implies a thesis, stakes, and an outcome. It naturally prompts the question "what are you betting on?" which is a better conversation starter than "what are you building?" The stakes aren't always money — they can be impact, joy, growth, or recognition.
+
+### 1b. Three motivation tags
+**Decision:** Every bet has a motivation: For Profit, For Impact, or For Craft. Builders pick one when creating a bet and can change it later.
+
+**Why:** The community includes builders making POS systems for small businesses (profit), emergency hotline directories (impact), and combat platformer games (craft). One framing doesn't fit all. Motivation tags let the platform adapt — narrative prompts, feed filters, and cohort groupings all key off this.
+
+**Motivation transitions are narrative milestones.** When a builder changes motivation (e.g., craft → profit), the platform prompts: "What changed?" This captures one of the most interesting moments in a build journey.
 
 ### 2. Flexible cadence, keep the aspiration
 **Decision:** Remove the fixed 12-month calendar grid. Builders set their own start dates and deadlines.
@@ -46,11 +64,27 @@ AI tools are accelerating what builders can ship. But communities built around A
 
 **Why:** Builders don't naturally write updates. But they do naturally change statuses. Tying the storytelling to actions they're already taking means every bet accumulates a narrative arc without extra effort. Readers get a consistent story structure across every builder's journey. This is what makes 12in12 different from a blog or a project tracker.
 
-**Prompts by transition:**
-- **Created/Started:** "What's your thesis? Who is this for and why do you believe it will work?"
-- **Progress update:** "What did you ship this week? What blocked you? What's next?"
-- **Shipped/Launched:** "It's live. What did it take to get here? What surprised you?"
-- **Outcome (completed/parked/canceled):** "What happened? What did you learn? Would you make this bet again?"
+**Prompts by transition (adapt per motivation):**
+
+For Profit:
+- **Started:** "Who's your customer? What problem are you solving for them?"
+- **Progress:** "What did you ship? What blocked you? What's next?"
+- **Shipped:** "It's live. How are you reaching customers? What surprised you?"
+- **Outcome:** "Did it work? What did the numbers say? Would you make this bet again?"
+
+For Impact:
+- **Started:** "Who does this help? Why does this matter to you?"
+- **Progress:** "What did you build? Who's using it? What feedback are you hearing?"
+- **Shipped:** "It's out there. How are people using it? What changed?"
+- **Outcome:** "What impact did it have? What did you learn? What's next for this?"
+
+For Craft:
+- **Started:** "What are you trying to build or learn? What inspired this?"
+- **Progress:** "What's working? What's been the most fun or surprising part?"
+- **Shipped:** "You shipped it. What was the hardest part? What are you most proud of?"
+- **Outcome:** "What did you learn? What would you do differently? What's next?"
+
+**Motivation change:** "This started as [old] and is now [new]. What changed?"
 
 ### 4. Builders-only audience
 **Decision:** The platform serves builders, not end-users of their products. No marketplace, no product discovery for non-builders.
@@ -82,8 +116,10 @@ AI tools are accelerating what builders can ship. But communities built around A
 - [ ] Reframe UI language: "products/projects" becomes "bets"
 - [ ] Replace fixed 12-month calendar grid with dynamic bet cards on profile
 - [ ] Add `started_at` and `deadline` fields to bets (replace calendar `month`)
-- [ ] Add narrative prompts on status transitions
-- [ ] Shared community feed page (all updates, all builders)
+- [ ] Add `motivation` field to bets (profit / impact / craft)
+- [ ] Add narrative prompts on status transitions (adapted per motivation)
+- [ ] Prompt on motivation change as a narrative milestone
+- [ ] Shared community feed page (all updates, all builders, filterable by motivation)
 - [ ] Clean up dead code and debug logs
 - [ ] Blog post + email to existing users about the direction change
 

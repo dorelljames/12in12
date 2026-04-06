@@ -2,9 +2,9 @@
 
 ## Context
 
-After launching 12in12.pro and getting real builders to join, it was time to step back and figure out where to take this. The strict "12 products in 12 months" format had energy but also friction — builders wanted in but the pace was intimidating, and retention suffered.
+12in12.pro originally launched with the "12 products in 12 months" pitch. Real builders joined, but over time it died down. Coming back to it now after working on hapsay.com — which gave something solid to build around and share — the motivation is clearer: building is lonely, and having a community to share the journey with matters as much as the products themselves.
 
-This session worked through the key product decisions one at a time.
+The strict format had energy but also friction — builders wanted in but the pace was intimidating, and retention suffered. This session worked through the key product decisions one at a time.
 
 ---
 
@@ -16,9 +16,19 @@ This session worked through the key product decisions one at a time.
 - Creatives shipping side projects
 - AI-augmented builders
 
-**Decision:** Solo founders and indie hackers who ship multiple products to find what sticks. The "betting on yourself" identity is the sharpest angle — it's specific, underserved, and matches the founder's own story.
+**Initial decision:** Solo founders and indie hackers who ship multiple products to find what sticks.
 
-**Why this matters:** "Builder" is too generic. "Person who bets on themselves multiple times a year" is a movement.
+**Revised after community input (April 6):** The community is broader than indie hackers. Real builders in the group chat showed:
+- **NegosyoHub** — POS for small PH businesses (for profit)
+- **ugnay.ph** — Emergency hotline directory, "pure vibe coded" (for impact)
+- **hooperking.com** — Basketball player profiles for scouts (for impact)
+- **parallelbooth.com** — P2P photobooth, personal fun project (for craft)
+- **Code Wraith** — Combat platformer game on itch.io (for craft)
+- **aiengineerpack.com** — AI tool credits pack (for profit)
+
+**Final decision:** Anyone who builds and ships things they care about. The "betting on yourself" identity still works — but the bet isn't always about revenue. It's about committing your time and skills to something you believe in, for any reason.
+
+**Why this matters:** "Builder" is too generic. "Person who bets on themselves" is a movement — whether they're betting on a business, a cause, or their own growth.
 
 ---
 
@@ -148,16 +158,61 @@ This session worked through the key product decisions one at a time.
 
 ---
 
-## MVP Scope
+## Decision 12: Does "bet" still work for non-commercial projects? (April 6)
+
+**Context:** After seeing community members share projects built for causes (emergency hotlines), fun (games, photobooth), and profit (POS systems), the question arose: does "bet" only apply to commercial ventures?
+
+**Decision:** "Bet" stays and applies to everything. Betting on yourself means putting your time and skills on the line for something you believe in — whether that's a business, a cause, or personal growth.
+
+---
+
+## Decision 13: Motivation tags (April 6)
+
+**Options explored:**
+- A) Four tags — For Profit, For Impact, For Fun, For Learning
+- B) Three tags — For Profit, For Impact, For Craft (craft = fun + learning)
+- C) Two tags — Commercial and Personal
+
+**Decision:** Option B. Three tags:
+- **For Profit** — building a business (NegosyoHub, aiengineerpack)
+- **For Impact** — solving a problem for a community (ugnay.ph, hooperking)
+- **For Craft** — building to learn, have fun, or grow (parallelbooth, Code Wraith)
+
+**Why three:** Four splits fun from learning, a distinction most builders won't care about. Two loses the ability to highlight cause/impact projects distinctly. Three is memorable and covers everything.
+
+---
+
+## Decision 14: Motivation can change (April 6)
+
+**Options explored:**
+- A) Locked on creation
+- B) Changeable anytime
+- C) Changeable, and the change is part of the story
+
+**Decision:** Option C. When a builder switches motivation, the platform prompts: "This started as [old] and is now [new]. What changed?"
+
+**Why:** The moment a hobby becomes a business is one of the most compelling builder stories. Capturing that transition adds narrative depth.
+
+---
+
+## Decision 15: Keep the "12 in 12" name (April 6)
+
+**Decision:** Keep it. The name has recognition, a domain, and existing users. "12 in 12" becomes aspirational, not literal — like how "500 Startups" doesn't mean 500.
+
+---
+
+## MVP Scope (Updated April 6)
 
 **In (ship first):**
 1. Reframe UI language: "products/projects" → "bets"
 2. Replace 12-month grid with dynamic bet cards
 3. Add started_at and deadline fields (replace calendar month)
-4. Narrative prompts on status transitions
-5. Shared community feed page
-6. Clean up dead code and debug logs
-7. Blog post + email to existing users
+4. Add motivation field (profit / impact / craft)
+5. Narrative prompts on status transitions (adapted per motivation)
+6. Prompt on motivation change as narrative milestone
+7. Shared community feed page (filterable by motivation)
+8. Clean up dead code and debug logs
+9. Blog post + email to existing users
 
 **Next up:**
 - Richer structured prompts for updates
@@ -166,7 +221,7 @@ This session worked through the key product decisions one at a time.
 - Progress nudges
 
 **Future:**
-- Cohort system with paid tier
+- Cohort system with paid tier (cohorts can form around motivation)
 - Follow model
 - Milestone celebrations
 - Builder discovery
