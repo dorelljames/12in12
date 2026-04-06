@@ -153,6 +153,19 @@ export const DELETE: APIRoute = async ({ cookies, params }) => {
       });
     }
 
+    // Verify user owns the update's profile
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("id", update.profile_id)
+      .single();
+
+    if (!profile || user.id !== profile.user_id) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+      });
+    }
+
     // Delete the update
     const { error: deleteError } = await supabase
       .from("product_updates")

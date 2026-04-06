@@ -88,33 +88,31 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       .select()
       .single();
 
-    // Create notification
-    const { data: product } = await supabase
-      .from("products")
-      .select(
-        `
-        *,
-        profile:profile_id (
-          user_id
-        )
-      `
-      )
-      .eq("id", productId)
-      .single();
-    if (product) {
-      await supabase
-        .from("notifications")
-        .insert({
-          comment_id: comment.id,
-          user_id: product.profile.user_id,
-          type: "comment",
-        });
-    }
-
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
       });
+    }
+
+    // Create notification for the project owner (non-blocking)
+    try {
+      const { data: product } = await supabase
+        .from("products")
+        .select(`*, profile:profile_id ( user_id )`)
+        .eq("id", productId)
+        .single();
+
+      if (product && product.profile.user_id !== user.id) {
+        await supabase
+          .from("notifications")
+          .insert({
+            comment_id: comment.id,
+            user_id: product.profile.user_id,
+            type: "comment",
+          });
+      }
+    } catch (notifErr) {
+      console.error("Failed to create notification:", notifErr);
     }
 
     return new Response(JSON.stringify(comment));

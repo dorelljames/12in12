@@ -367,7 +367,10 @@ if (name && email && username) {
           if (result.error) {
             const errorDiv = document.createElement("div");
             errorDiv.className = "text-center font-semibold";
-            errorDiv.innerHTML = `<p class="text-red-400">${result.error}</p>`;
+            const errorP = document.createElement("p");
+            errorP.className = "text-red-400";
+            errorP.textContent = result.error;
+            errorDiv.appendChild(errorP);
             form.insertBefore(errorDiv, form.firstChild);
           }
         }
@@ -376,7 +379,10 @@ if (name && email && username) {
         console.error("Error submitting form:", error);
         const errorDiv = document.createElement("div");
         errorDiv.className = "text-center font-semibold";
-        errorDiv.innerHTML = `<p class="text-red-400">Something went wrong. Please try again.</p>`;
+        const errorP = document.createElement("p");
+        errorP.className = "text-red-400";
+        errorP.textContent = "Something went wrong. Please try again.";
+        errorDiv.appendChild(errorP);
         form.insertBefore(errorDiv, form.firstChild);
       }
     });

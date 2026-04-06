@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { supabaseAdmin as supabase } from "../../../lib/supabase";
+import { supabase, supabaseAdmin } from "../../../lib/supabase";
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
@@ -60,13 +60,19 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       projectId ? projectId + "-" : ""
     }${Date.now()}.${fileExt}`;
 
-    // If projectId is provided, delete old thumbnail if it exists
+    // If projectId is provided, verify ownership and delete old thumbnail
     if (projectId) {
-      const { data: project } = await supabase
+      const { data: project } = await supabaseAdmin
         .from("products")
-        .select("thumbnail_url")
+        .select("thumbnail_url, profile_id, profiles:profile_id ( user_id )")
         .eq("id", projectId)
         .single();
+
+      if (!project || (project as any).profiles?.user_id !== user.id) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+        });
+      }
 
       if (project?.thumbnail_url) {
         try {
@@ -75,7 +81,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
             .slice(-3)
             .join("/");
           if (oldFilePath) {
-            await supabase.storage.from("thumbnails").remove([oldFilePath]);
+            await supabaseAdmin.storage.from("thumbnails").remove([oldFilePath]);
           }
         } catch (error) {
           console.error("Error removing old thumbnail:", error);
@@ -89,7 +95,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const fileData = new Uint8Array(arrayBuffer);
 
     // Upload new thumbnail
-    const { data, error: uploadError } = await supabase.storage
+    const { data, error: uploadError } = await supabaseAdmin.storage
       .from("thumbnails")
       .upload(filePath, fileData, {
         contentType: file.type,
@@ -104,11 +110,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Get the public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from("thumbnails").getPublicUrl(filePath);
+    } = supabaseAdmin.storage.from("thumbnails").getPublicUrl(filePath);
 
     // If projectId is provided, update the project with new thumbnail URL
     if (projectId) {
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseAdmin
         .from("products")
         .update({
           thumbnail_url: publicUrl,

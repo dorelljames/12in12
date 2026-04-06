@@ -1,44 +1,47 @@
 import type { APIRoute } from "astro";
 import { supabase } from "../../../lib/supabase";
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const { email } = await request.json();
 
-    // Get the current user's session
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const accessToken = cookies.get("sb-access-token")?.value;
+    const refreshToken = cookies.get("sb-refresh-token")?.value;
 
-    // Check if the user is logged in and their email matches
-    const verified =
-      session?.user?.email === email && session?.user?.email_confirmed_at;
-    const emailConfirmed = session?.user?.email_confirmed_at ? true : false;
-    const isCurrentUser = session?.user?.email === email;
+    if (!accessToken || !refreshToken) {
+      return new Response(
+        JSON.stringify({ success: true, verified: false, message: "Not logged in" }),
+        { status: 200 }
+      );
+    }
+
+    const { data: { user }, error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (error || !user) {
+      return new Response(
+        JSON.stringify({ success: true, verified: false, message: "Session invalid" }),
+        { status: 200 }
+      );
+    }
+
+    const verified = user.email === email && !!user.email_confirmed_at;
 
     return new Response(
       JSON.stringify({
         success: true,
         verified,
-        emailConfirmed,
-        isCurrentUser,
-        message: !verified
-          ? !emailConfirmed
-            ? "Please check your email to confirm your account"
-            : !isCurrentUser
-            ? "Email does not match current user"
-            : "Unknown verification error"
-          : "Email verified successfully",
+        message: verified
+          ? "Email verified successfully"
+          : "Please check your email to confirm your account",
       }),
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error checking verification:", error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: "Failed to check verification status",
-      }),
+      JSON.stringify({ success: false, error: "Failed to check verification status" }),
       { status: 500 }
     );
   }

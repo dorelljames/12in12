@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { supabaseAdmin as supabase } from "../../../lib/supabase";
+import { supabase, supabaseAdmin } from "../../../lib/supabase";
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
@@ -58,7 +58,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const filePath = `avatars/${user.id}/${Date.now()}.${fileExt}`;
 
     // Delete old avatar if it exists
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("avatar_url")
       .eq("user_id", user.id)
@@ -71,7 +71,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
           .slice(-3)
           .join("/");
         if (oldFilePath) {
-          await supabase.storage.from("avatars").remove([oldFilePath]);
+          await supabaseAdmin.storage.from("avatars").remove([oldFilePath]);
         }
       } catch (error) {
         console.error("Error removing old avatar:", error);
@@ -84,7 +84,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const fileData = new Uint8Array(arrayBuffer);
 
     // Upload new avatar
-    const { data, error: uploadError } = await supabase.storage
+    const { data, error: uploadError } = await supabaseAdmin.storage
       .from("avatars")
       .upload(filePath, fileData, {
         contentType: file.type,
@@ -99,10 +99,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Get the public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from("avatars").getPublicUrl(filePath);
+    } = supabaseAdmin.storage.from("avatars").getPublicUrl(filePath);
 
     // Update user's profile with new avatar URL
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from("profiles")
       .update({
         avatar_url: publicUrl,

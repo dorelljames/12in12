@@ -1,26 +1,28 @@
 import type { APIRoute } from "astro";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "../../../lib/supabase";
 
-const supabase = createClient(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-);
-
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const { username } = await request.json();
 
-    // Get the current user's session
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const accessToken = cookies.get("sb-access-token")?.value;
+    const refreshToken = cookies.get("sb-refresh-token")?.value;
 
-    if (!session) {
+    if (!accessToken || !refreshToken) {
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: "You must be logged in to claim a username",
-        }),
+        JSON.stringify({ success: false, error: "You must be logged in to claim a username" }),
+        { status: 401 }
+      );
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ success: false, error: "You must be logged in to claim a username" }),
         { status: 401 }
       );
     }
@@ -33,17 +35,12 @@ export const POST: APIRoute = async ({ request }) => {
       .single();
 
     if (checkError && checkError.code !== "PGRST116") {
-      // PGRST116 means no rows returned
-      console.error("Error checking username:", checkError);
       throw checkError;
     }
 
     if (existingUser) {
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Username is already taken",
-        }),
+        JSON.stringify({ success: false, error: "Username is already taken" }),
         { status: 400 }
       );
     }
@@ -51,34 +48,26 @@ export const POST: APIRoute = async ({ request }) => {
     // Create or update profile with claimed username
     const { error: upsertError } = await supabase.from("profiles").upsert(
       {
-        id: session.user.id,
+        id: user.id,
         username,
         updated_at: new Date().toISOString(),
       },
-      {
-        onConflict: "id",
-      }
+      { onConflict: "id" }
     );
 
     if (upsertError) {
-      console.error("Error upserting profile:", upsertError);
       throw upsertError;
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        data: { username },
-      }),
+      JSON.stringify({ success: true, data: { username } }),
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error claiming username:", error);
     return new Response(
       JSON.stringify({
         success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to claim username",
+        error: error instanceof Error ? error.message : "Failed to claim username",
       }),
       { status: 500 }
     );

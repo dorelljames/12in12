@@ -26,11 +26,13 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Set auth cookies
     cookies.set("sb-access-token", access_token, {
       path: "/",
+      sameSite: "lax",
       secure: true,
       httpOnly: true,
     });
     cookies.set("sb-refresh-token", refresh_token, {
       path: "/",
+      sameSite: "lax",
       secure: true,
       httpOnly: true,
     });
@@ -71,11 +73,13 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
         // Set auth cookies
         cookies.set("sb-access-token", data.session.access_token, {
           path: "/",
+          sameSite: "lax",
           secure: true,
           httpOnly: true,
         });
         cookies.set("sb-refresh-token", data.session.refresh_token, {
           path: "/",
+          sameSite: "lax",
           secure: true,
           httpOnly: true,
         });
@@ -105,11 +109,13 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
         // Set auth cookies
         cookies.set("sb-access-token", data.session.access_token, {
           path: "/",
+          sameSite: "lax",
           secure: true,
           httpOnly: true,
         });
         cookies.set("sb-refresh-token", data.session.refresh_token, {
           path: "/",
+          sameSite: "lax",
           secure: true,
           httpOnly: true,
         });

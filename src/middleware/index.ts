@@ -48,16 +48,24 @@ export const onRequest = defineMiddleware(
         return redirect("/signin");
       }
 
-      locals.email = data.user?.email!;
-      cookies.set("sb-access-token", data?.session?.access_token!, {
-        sameSite: "strict",
+      if (!data.session || !data.user) {
+        cookies.delete("sb-access-token", { path: "/" });
+        cookies.delete("sb-refresh-token", { path: "/" });
+        return redirect("/signin");
+      }
+
+      locals.email = data.user.email!;
+      cookies.set("sb-access-token", data.session.access_token, {
+        sameSite: "lax",
         path: "/",
         secure: true,
+        httpOnly: true,
       });
-      cookies.set("sb-refresh-token", data?.session?.refresh_token!, {
-        sameSite: "strict",
+      cookies.set("sb-refresh-token", data.session.refresh_token, {
+        sameSite: "lax",
         path: "/",
         secure: true,
+        httpOnly: true,
       });
     }
 

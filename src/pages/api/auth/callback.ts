@@ -23,19 +23,26 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     }
     session = data.session;
   } else {
-    session = {
+    // Validate tokens with Supabase before trusting them
+    const { data, error } = await supabase.auth.setSession({
       access_token: accessToken as string,
       refresh_token: refreshToken as string,
-    };
+    });
+    if (error || !data.session) {
+      return new Response("Invalid authentication credentials", { status: 401 });
+    }
+    session = data.session;
   }
 
   cookies.set("sb-access-token", session.access_token, {
     path: "/",
+    sameSite: "lax",
     secure: true,
     httpOnly: true,
   });
   cookies.set("sb-refresh-token", session.refresh_token, {
     path: "/",
+    sameSite: "lax",
     secure: true,
     httpOnly: true,
   });
