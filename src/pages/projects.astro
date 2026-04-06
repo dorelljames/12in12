@@ -3,13 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 import SearchFilter from "../components/SearchFilter.astro";
-import { createClient } from "@supabase/supabase-js";
-
-// Initialize Supabase client
-const supabase = createClient(
-  import.meta.env.PUBLIC_SUPABASE_URL,
-  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-);
+import { supabase } from "../lib/supabase";
 
 // Get URL params for filtering
 const { searchParams } = Astro.url;

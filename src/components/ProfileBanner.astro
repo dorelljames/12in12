@@ -19,7 +19,6 @@ if (accessToken && refreshToken) {
 
   if (sessionUser) {
     user = sessionUser;
-    console.log("🚀 ~ user:", user);
     // Fetch user's profile
     const { data: userProfile } = await supabase
       .from("profiles")
@@ -28,7 +27,6 @@ if (accessToken && refreshToken) {
       .single();
 
     profile = userProfile;
-    console.log("🚀 ~ profile:", profile);
   }
 }
 ---

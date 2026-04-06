@@ -26,8 +26,6 @@ function isMatch(path: string, patterns: string[]): boolean {
 export const onRequest = defineMiddleware(
   async ({ locals, url, cookies, redirect }, next) => {
     if (isMatch(url.pathname, protectedRoutes)) {
-      console.log("ehree");
-
       const accessToken = cookies.get("sb-access-token");
       const refreshToken = cookies.get("sb-refresh-token");
 

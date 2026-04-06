@@ -149,7 +149,6 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
     if (error) {
-      console.log("🚀 ~ constPOST:APIRoute= ~ error:", error);
       return new Response(error.message, { status: 500 });
     }
 

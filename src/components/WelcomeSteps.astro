@@ -389,8 +389,6 @@ const isVerified =
       const claimError = document.getElementById("claimError");
       if (!claimUsernameBtn || !claimSpinner || !claimError) return;
 
-      console.log("setup claim button successful");
-
       const setLoading = (isLoading: boolean) => {
         claimUsernameBtn.disabled = isLoading;
         if (isLoading) {
@@ -414,13 +412,11 @@ const isVerified =
       };
 
       claimUsernameBtn.addEventListener("click", async () => {
-        console.log("Claim button clicked");
         try {
           setLoading(true);
           claimError.classList.add("hidden");
 
           const username = claimUsernameBtn.getAttribute("data-username");
-          console.log("Attempting to claim username:", username);
 
           const response = await fetch("/api/profile/claim", {
             method: "POST",
@@ -431,12 +427,9 @@ const isVerified =
             credentials: "include", // Important: include credentials for session
           });
 
-          console.log("Claim response status:", response.status);
           const result = await response.json();
-          console.log("Claim response:", result);
 
           if (response.ok && result.success) {
-            console.log("Username claimed successfully");
             // Replace the entire button content with checkmark
             claimUsernameBtn.innerHTML = `<span class="inline-flex items-center">✅</span>`;
             claimUsernameBtn.disabled = true;
@@ -447,7 +440,6 @@ const isVerified =
             claimUsernameBtn.classList.add("bg-emerald-500");
             this.incrementSteps();
           } else {
-            console.error("Failed to claim username:", result.error);
             setLoading(false);
             showError(result.error || "Failed to claim username");
           }

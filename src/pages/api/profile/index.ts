@@ -21,8 +21,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       access_token: accessToken,
       refresh_token: refreshToken,
     });
-    console.log("🚀 ~ constPOST:APIRoute= ~ user:", user);
-
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,

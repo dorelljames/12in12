@@ -101,17 +101,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       )
       .eq("id", productId)
       .single();
-    console.log("🚀 ~ constPOST:APIRoute= ~ product:", product);
     if (product) {
-      const { data: notification } = await supabase
+      await supabase
         .from("notifications")
         .insert({
           comment_id: comment.id,
           user_id: product.profile.user_id,
           type: "comment",
-        })
-        .select();
-      console.log("🚀 ~ constPOST:APIRoute= ~ notification:", notification);
+        });
     }
 
     if (error) {

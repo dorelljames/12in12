@@ -55,13 +55,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
 // Handle GET request for OTP verification and other auth methods
 export const GET: APIRoute = async ({ url, redirect, cookies }) => {
-  console.log("🚀 ~ constGET:APIRoute= ~ url:", url);
   const token_hash = url.searchParams.get("token_hash");
-  console.log("🚀 ~ constGET:APIRoute= ~ token_hash:", token_hash);
   const type = url.searchParams.get("type");
-  console.log("🚀 ~ constGET:APIRoute= ~ type:", type);
   const code = url.searchParams.get("code");
-  console.log("🚀 ~ constGET:APIRoute= ~ code:", code);
   const next = url.searchParams.get("next") || "/profile";
 
   // Handle PKCE flow with code

@@ -9,16 +9,13 @@ const supabase = createClient(
 export const POST: APIRoute = async ({ request }) => {
   try {
     const { username } = await request.json();
-    console.log("Claiming username:", username);
 
     // Get the current user's session
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    console.log("Session:", session?.user?.id);
 
     if (!session) {
-      console.log("No session found");
       return new Response(
         JSON.stringify({
           success: false,
@@ -42,7 +39,6 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     if (existingUser) {
-      console.log("Username already taken:", username);
       return new Response(
         JSON.stringify({
           success: false,
@@ -69,7 +65,6 @@ export const POST: APIRoute = async ({ request }) => {
       throw upsertError;
     }
 
-    console.log("Successfully claimed username:", username);
     return new Response(
       JSON.stringify({
         success: true,
