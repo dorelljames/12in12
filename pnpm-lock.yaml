@@ -20,9 +20,6 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.101.1
         version: 2.101.1
-      '@types/canvas-confetti':
-        specifier: ^1.9.0
-        version: 1.9.0
       astro:
         specifier: ^6.1.3
         version: 6.1.3(@types/node@25.5.2)(jiti@1.21.7)(rollup@4.60.1)(typescript@5.7.2)(yaml@2.7.0)
@@ -32,6 +29,10 @@ importers:
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.17
+    devDependencies:
+      '@types/canvas-confetti':
+        specifier: ^1.9.0
+        version: 1.9.0
       wrangler:
         specifier: ^4.80.0
         version: 4.80.0

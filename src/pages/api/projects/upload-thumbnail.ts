@@ -122,7 +122,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         .eq("id", projectId);
 
       if (updateError) {
-        console.error("Error updating project:", updateError);
+        // Clean up the uploaded file since the DB update failed
+        await supabaseAdmin.storage.from("thumbnails").remove([filePath]);
         throw updateError;
       }
     }

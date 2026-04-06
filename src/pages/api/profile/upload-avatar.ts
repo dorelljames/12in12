@@ -110,7 +110,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       .eq("user_id", user.id);
 
     if (updateError) {
-      console.error("Error updating profile:", updateError);
+      // Clean up the uploaded file since the DB update failed
+      await supabaseAdmin.storage.from("avatars").remove([filePath]);
       throw updateError;
     }
 
