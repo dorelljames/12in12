@@ -106,12 +106,12 @@ const jsonLd = {
     <meta property="og:url" content={Astro.url.origin} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={`${Astro.url.origin}/images/og-home.png`} />
+    <!-- TODO: create a proper OG image at public/images/og-home.png -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content={Astro.url.origin} />
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
-    <meta property="twitter:image" content={`${Astro.url.origin}/images/og-home.png`} />
+    <!-- TODO: create a proper OG image at public/images/og-home.png -->
     <link rel="canonical" href={Astro.url.origin} />
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>

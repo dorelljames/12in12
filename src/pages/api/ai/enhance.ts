@@ -57,7 +57,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const systemPrompt = prompts[field] || prompts.description;
 
     const result = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: openai("gpt-4.1-mini"),
       system: systemPrompt,
       prompt: text,
     });
