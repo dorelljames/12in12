@@ -43,16 +43,20 @@ const { data: rawUpdates } = await supabase
   .limit(5);
 
 // Pre-process updates to avoid template compilation issues
-const recentUpdates = (rawUpdates || []).map((u: any) => ({
-  type: u.type,
-  created_at: u.created_at,
-  profileUrl: "/" + (u.profiles?.username || "builder"),
-  avatarUrl: u.profiles?.avatar_url || "",
-  displayName: u.profiles?.full_name || u.profiles?.username || "Builder",
-  initial: (u.profiles?.username || "?")[0].toUpperCase(),
-  productUrl: u.products?.slug ? "/projects/" + u.products.slug : "",
-  productTitle: u.products?.title || "",
-}));
+const recentUpdates = (rawUpdates || []).map((u: any) => {
+  const content = (u.content || "").trim();
+  return {
+    type: u.type,
+    created_at: u.created_at,
+    content: content.length > 120 ? content.slice(0, 120) + "..." : content,
+    profileUrl: "/" + (u.profiles?.username || "builder"),
+    avatarUrl: u.profiles?.avatar_url || "",
+    displayName: u.profiles?.full_name || u.profiles?.username || "Builder",
+    initial: (u.profiles?.username || "?")[0].toUpperCase(),
+    productUrl: u.products?.slug ? "/projects/" + u.products.slug : "",
+    productTitle: u.products?.title || "",
+  };
+});
 
 // Fetch featured builders (those with the most bets)
 const { data: builders } = await supabase
@@ -139,16 +143,20 @@ const jsonLd = {
             {recentUpdates.map((u) => {
               const tc = getTypeConfig(u.type);
               return (
-                <li class="flex items-start gap-3 py-2">
-                  <a href={u.profileUrl} class="shrink-0">
+                <li class="flex items-start gap-3 py-3 border-b border-gray-800/50 last:border-0">
+                  <a href={u.profileUrl} class="shrink-0 mt-0.5">
                     <img src={u.avatarUrl || "/favicon.svg"} alt="" class="w-8 h-8 rounded-full" />
                   </a>
                   <div class="flex-1 min-w-0">
                     <p class="text-sm text-gray-300">
                       <a href={u.profileUrl} class="font-medium text-white hover:text-emerald-400 transition-colors">{u.displayName}</a>
                       {" posted a " + tc.emoji + " " + tc.label.toLowerCase()}
+                      <span class="text-gray-600 mx-1">&middot;</span>
+                      <span class="text-xs text-gray-500">{timeAgo(u.created_at)}</span>
                     </p>
-                    <p class="text-xs text-gray-500 mt-0.5">{timeAgo(u.created_at)}</p>
+                    {u.content && (
+                      <p class="text-sm text-gray-400 mt-1 line-clamp-2">{u.content}</p>
+                    )}
                   </div>
                 </li>
               );
