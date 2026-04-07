@@ -7,10 +7,6 @@ import { supabase } from "../lib/supabase";
 // Get URL params for filtering
 const { searchParams } = Astro.url;
 const status = searchParams.get("status");
-const month = searchParams.get("month");
-
-// Get current month
-const currentMonth = new Date().toLocaleString("default", { month: "long" });
 
 // Build query
 let query = supabase
@@ -31,9 +27,6 @@ let query = supabase
 if (status) {
   query = query.eq("status", status);
 }
-if (month) {
-  query = query.eq("month", month);
-}
 
 // Fetch projects
 const { data: projects } = await query;
@@ -43,7 +36,7 @@ const techStacks = [
   ...new Set(projects?.flatMap((p) => p.tech_stack || [])),
 ].sort();
 
-// Get months for filtering
+// Month names kept for display only
 const months = [
   "January",
   "February",
@@ -316,19 +309,19 @@ const getStatusConfig = (status: string = "not_started") => {
                   All
                 </a>
                 <a
-                  href="/projects?status=completed"
+                  href="/bets?status=completed"
                   class={`px-4 py-2.5 rounded-lg text-center text-sm font-medium transition-colors ${status === "completed" ? "bg-emerald-900/50 text-emerald-200 border border-emerald-700/50 shadow-sm" : "bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700"}`}
                 >
                   Completed
                 </a>
                 <a
-                  href="/projects?status=in_progress"
+                  href="/bets?status=in_progress"
                   class={`px-4 py-2.5 rounded-lg text-center text-sm font-medium transition-colors ${status === "in_progress" ? "bg-amber-900/50 text-amber-200 border border-amber-700/50 shadow-sm" : "bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700"}`}
                 >
                   In Progress
                 </a>
                 <a
-                  href="/projects?status=not_started"
+                  href="/bets?status=not_started"
                   class={`px-4 py-2.5 rounded-lg text-center text-sm font-medium transition-colors ${status === "not_started" ? "bg-slate-800/80 text-slate-200 border border-slate-600 shadow-sm" : "bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700"}`}
                 >
                   Not Started
@@ -336,28 +329,6 @@ const getStatusConfig = (status: string = "not_started") => {
               </div>
             </div>
 
-            {/* Month Filter */}
-            <div>
-              <label class="block text-sm font-medium text-slate-300 mb-2"
-                >Month</label
-              >
-              <select
-                class="w-full rounded-lg bg-slate-700/50 border border-slate-600 text-slate-200 text-sm px-4 py-3 appearance-none hover:bg-slate-700 focus:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-                onchange="window.location.href = this.value"
-              >
-                <option value="/bets" selected={!month}>All Months</option>
-                {
-                  months.map((m) => (
-                    <option
-                      value={`/projects?month=${m}`}
-                      selected={month === m}
-                    >
-                      {m} {m === currentMonth ? "(Current)" : ""}
-                    </option>
-                  ))
-                }
-              </select>
-            </div>
           </div>
         </div>
       </div>
