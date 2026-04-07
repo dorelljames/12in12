@@ -405,7 +405,7 @@ const getStatusConfig = (status: string = "not_started") => {
 
               <div class="p-6">
                 {/* Builder Info */}
-                <div class="flex items-center gap-3 mb-4">
+                <a href={`/${project.profiles.username}`} class="flex items-center gap-3 mb-4 group/builder">
                   {project.profiles.avatar_url ? (
                     <img
                       src={project.profiles.avatar_url}
@@ -420,14 +420,14 @@ const getStatusConfig = (status: string = "not_started") => {
                     </div>
                   )}
                   <div>
-                    <h4 class="text-sm font-medium text-slate-200">
+                    <h4 class="text-sm font-medium text-slate-200 group-hover/builder:text-primary-400 transition-colors">
                       {project.profiles.full_name || project.profiles.username}
                     </h4>
-                    <div class="text-xs text-slate-400 hover:text-primary-400">
+                    <div class="text-xs text-slate-400">
                       @{project.profiles.username}
                     </div>
                   </div>
-                </div>
+                </a>
 
                 {/* Project Info */}
                 <h3 class="text-xl font-semibold text-slate-200 mb-2 group-hover:text-primary-400 transition-colors">
