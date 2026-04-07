@@ -29,23 +29,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   }
 
   try {
-    // Verify user exists in Auth before attempting OTP
-    const {
-      data: { users: matchedUsers },
-    } = await supabaseAdmin.auth.admin.listUsers({
-      filter: `email.eq.${email}`,
-      perPage: 1,
-    });
-
-    if (!matchedUsers || matchedUsers.length === 0) {
-      return redirect(
-        `/signin?error=${encodeURIComponent(
-          "No account associated with this email. Please use the link below to join the community..."
-        )}`
-      );
-    }
-
-    // Use admin client — anon client with PKCE may fail for certain user states
+    // Use admin client for reliable OTP delivery
     const { error } = await supabaseAdmin.auth.signInWithOtp({
       email,
       options: {
@@ -54,6 +38,16 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     });
 
     if (error) {
+      if (
+        error.message.includes("not allowed") ||
+        error.message.includes("not found")
+      ) {
+        return redirect(
+          `/signin?error=${encodeURIComponent(
+            "No account associated with this email. Please use the link below to join the community..."
+          )}`
+        );
+      }
       return redirect(`/signin?error=${encodeURIComponent(error.message)}`);
     }
 

@@ -10,9 +10,9 @@ export default defineConfig({
   output: "server",
   vite: {
     plugins: [tailwindcss()],
-    // ssr: {
-    //   noExternal: true,
-    // },
+    ssr: {
+      noExternal: true,
+    },
   },
   adapter: cloudflare({
     imageService: "compile",

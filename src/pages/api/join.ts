@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
 import { Client } from "@notionhq/client";
 import { supabaseAdmin as supabase } from "../../lib/supabase";
-import { normalizeEmail } from "../../lib/utils";
 import {
   PUBLIC_NOTION_TOKEN,
   PUBLIC_NOTION_DATABASE_ID,
@@ -12,6 +11,23 @@ const notion = new Client({
 });
 
 const DATABASE_ID = PUBLIC_NOTION_DATABASE_ID;
+
+// admin.listUsers filter is broken — iterate to find user by email
+async function findUserByEmail(email: string) {
+  let page = 1;
+  const perPage = 50;
+  while (true) {
+    const {
+      data: { users },
+      error,
+    } = await supabase.auth.admin.listUsers({ page, perPage });
+    if (error || !users || users.length === 0) return null;
+    const found = users.find((u) => u.email === email);
+    if (found) return found;
+    if (users.length < perPage) return null;
+    page++;
+  }
+}
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -47,23 +63,14 @@ export const POST: APIRoute = async ({ request }) => {
       errors.username = "Username is required";
     }
 
-    // If there are any errors, return them
     if (Object.keys(errors).length > 0) {
       return new Response(
-        JSON.stringify({
-          success: false,
-          errors,
-        }),
-        {
-          status: 400,
-        },
+        JSON.stringify({ success: false, errors }),
+        { status: 400 },
       );
     }
 
-    // Check if user already exists in Supabase
-    const normalizedEmail = normalizeEmail(email!);
-
-    // Check existing profiles by normalized email pattern
+    // Check if username is taken
     const { data: existingProfile } = await supabase
       .from("profiles")
       .select("id")
@@ -80,176 +87,89 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Try to find user by email via admin API
-    const {
-      data: { users: matchedUsers },
-      error: getUserError,
-    } = await supabase.auth.admin.listUsers({
-      filter: `email.eq.${normalizedEmail}`,
-      perPage: 1,
-    });
-
-    if (getUserError) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Failed to check user existence",
-        }),
-        { status: 500 },
-      );
-    }
-
-    if (matchedUsers && matchedUsers.length > 0) {
-      const existingUser = matchedUsers[0];
-
-      // Check if this auth user already has a profile
-      const { data: existingUserProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", existingUser.id)
-        .single();
-
-      if (existingUserProfile) {
-        // Fully registered user — direct them to sign in
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: "This email is already registered. Please sign in instead.",
-          }),
-          { status: 400 },
-        );
-      }
-
-      // Orphaned auth user (exists in Auth but no profile) — recover their account
-      await notion.pages.create({
-        parent: { database_id: DATABASE_ID },
-        properties: {
-          Name: { title: [{ text: { content: name! } }] },
-          Email: { email: email! },
-          Reason: { rich_text: [{ text: { content: reason! } }] },
-          Username: { rich_text: [{ text: { content: username! } }] },
-        },
+    // Try to create auth user — this reliably detects existing emails
+    const { data: newUser, error: createError } =
+      await supabase.auth.admin.createUser({
+        email: email!,
+        email_confirm: false,
       });
 
-      const { error: profileError } = await supabase.from("profiles").insert({
-        user_id: existingUser.id,
-        username: username,
-        created_at: new Date().toISOString(),
-      });
+    const redirectUrl = import.meta.env.DEV
+      ? "http://localhost:1234/api/auth/confirm"
+      : "https://12in12.pro/api/auth/confirm";
 
-      if (profileError) {
+    let authUserId: string;
+
+    if (createError) {
+      if (
+        createError.status === 422 &&
+        createError.message.includes("already been registered")
+      ) {
+        // Email already exists in Auth — check if they have a profile
+        const existingUser = await findUserByEmail(email!);
+        if (!existingUser) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "Something went wrong. Please try again...",
+            }),
+            { status: 500 },
+          );
+        }
+
+        const { data: existingUserProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("user_id", existingUser.id)
+          .single();
+
+        if (existingUserProfile) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error:
+                "This email is already registered. Please sign in instead.",
+            }),
+            { status: 400 },
+          );
+        }
+
+        // Orphaned auth user — recover by creating profile below
+        authUserId = existingUser.id;
+      } else {
         return new Response(
-          JSON.stringify({
-            success: false,
-            error: "Failed to create user profile",
-          }),
+          JSON.stringify({ success: false, error: createError.message }),
           { status: 500 },
         );
       }
-
-      // Resend magic link to complete sign-in
-      const redirectUrl = import.meta.env.DEV
-        ? "http://localhost:1234/api/auth/confirm"
-        : "https://12in12.pro/api/auth/confirm";
-
-      await supabase.auth.signInWithOtp({
-        email: existingUser.email!,
-        options: {
-          shouldCreateUser: false,
-          emailRedirectTo: redirectUrl,
-        },
-      });
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          data: { name, email, username },
-        }),
-        { status: 200 },
-      );
+    } else {
+      // New user created
+      authUserId = newUser.user!.id;
     }
+
+    // Send magic link
+    await supabase.auth.signInWithOtp({
+      email: email!,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: redirectUrl,
+      },
+    });
 
     // Create Notion entry
     await notion.pages.create({
       parent: { database_id: DATABASE_ID },
       properties: {
-        Name: {
-          title: [
-            {
-              text: {
-                content: name!,
-              },
-            },
-          ],
-        },
-        Email: {
-          email: email!,
-        },
-        Reason: {
-          rich_text: [
-            {
-              text: {
-                content: reason!,
-              },
-            },
-          ],
-        },
-        Username: {
-          rich_text: [
-            {
-              text: {
-                content: username!,
-              },
-            },
-          ],
-        },
+        Name: { title: [{ text: { content: name! } }] },
+        Email: { email: email! },
+        Reason: { rich_text: [{ text: { content: reason! } }] },
+        Username: { rich_text: [{ text: { content: username! } }] },
       },
     });
 
-    // Create the supabase user via OTP
-    const redirectUrl = import.meta.env.DEV
-      ? "http://localhost:1234/api/auth/confirm"
-      : "https://12in12.pro/api/auth/confirm";
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email!,
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo: redirectUrl,
-      },
-    });
-
-    if (error) {
-      return new Response(
-        JSON.stringify({ success: false, error: error.message }),
-        { status: 500 },
-      );
-    }
-
-    // Find the newly created user by email
-    const {
-      data: { users: newUsers },
-      error: findError,
-    } = await supabase.auth.admin.listUsers({
-      filter: `email.eq.${email}`,
-      perPage: 1,
-    });
-
-    const newUser = newUsers?.[0];
-
-    if (findError || !newUser?.id) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Failed to create user profile",
-        }),
-        { status: 500 },
-      );
-    }
-
-    // Create the initial profile
+    // Create profile
     const { error: profileError } = await supabase.from("profiles").insert({
-      user_id: newUser.id,
+      user_id: authUserId,
       username: username,
       created_at: new Date().toISOString(),
     });
@@ -260,24 +180,16 @@ export const POST: APIRoute = async ({ request }) => {
           success: false,
           error: "Failed to create user profile",
         }),
-        {
-          status: 500,
-        },
+        { status: 500 },
       );
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        data: {
-          name,
-          email,
-          username,
-        },
+        data: { name, email, username },
       }),
-      {
-        status: 200,
-      },
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error:", error);
@@ -286,9 +198,7 @@ export const POST: APIRoute = async ({ request }) => {
         success: false,
         error: "Something went wrong. Please try again...",
       }),
-      {
-        status: 500,
-      },
+      { status: 500 },
     );
   }
 };
