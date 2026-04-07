@@ -4,7 +4,6 @@ interface Props {
 }
 
 const { title = "12 Products in 12 Months" } = Astro.props;
-import "../styles/main.css";
 import "../styles/animations.css";
 import ProfileBanner from "../components/ProfileBanner.astro";
 ---
@@ -18,12 +17,6 @@ import ProfileBanner from "../components/ProfileBanner.astro";
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
-
-    <script
-      src="https://beamanalytics.b-cdn.net/beam.min.js"
-      data-token="941e2350-8b1f-4f87-8b02-53d93290d3dd"
-      is:inline
-      async></script>
 
     <script
       is:inline

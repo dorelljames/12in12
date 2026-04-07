@@ -56,7 +56,7 @@ export const POST: APIRoute = async ({ request }) => {
         }),
         {
           status: 400,
-        }
+        },
       );
     }
 
@@ -76,7 +76,7 @@ export const POST: APIRoute = async ({ request }) => {
           success: false,
           error: "This username is already taken.",
         }),
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -95,19 +95,77 @@ export const POST: APIRoute = async ({ request }) => {
           success: false,
           error: "Failed to check user existence",
         }),
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (matchedUsers && matchedUsers.length > 0) {
+      const existingUser = matchedUsers[0];
+
+      // Check if this auth user already has a profile
+      const { data: existingUserProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", existingUser.id)
+        .single();
+
+      if (existingUserProfile) {
+        // Fully registered user — direct them to sign in
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "This email is already registered. Please sign in instead.",
+          }),
+          { status: 400 },
+        );
+      }
+
+      // Orphaned auth user (exists in Auth but no profile) — recover their account
+      await notion.pages.create({
+        parent: { database_id: DATABASE_ID },
+        properties: {
+          Name: { title: [{ text: { content: name! } }] },
+          Email: { email: email! },
+          Reason: { rich_text: [{ text: { content: reason! } }] },
+          Username: { rich_text: [{ text: { content: username! } }] },
+        },
+      });
+
+      const { error: profileError } = await supabase.from("profiles").insert({
+        user_id: existingUser.id,
+        username: username,
+        created_at: new Date().toISOString(),
+      });
+
+      if (profileError) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Failed to create user profile",
+          }),
+          { status: 500 },
+        );
+      }
+
+      // Resend magic link to complete sign-in
+      const redirectUrl = import.meta.env.DEV
+        ? "http://localhost:1234/api/auth/confirm"
+        : "https://12in12.pro/api/auth/confirm";
+
+      await supabase.auth.signInWithOtp({
+        email: existingUser.email!,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: redirectUrl,
+        },
+      });
+
       return new Response(
         JSON.stringify({
-          success: false,
-          error: "This email is already registered. Please sign in instead.",
+          success: true,
+          data: { name, email, username },
         }),
-        {
-          status: 400,
-        }
+        { status: 200 },
       );
     }
 
@@ -164,7 +222,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (error) {
       return new Response(
         JSON.stringify({ success: false, error: error.message }),
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -185,7 +243,7 @@ export const POST: APIRoute = async ({ request }) => {
           success: false,
           error: "Failed to create user profile",
         }),
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -204,7 +262,7 @@ export const POST: APIRoute = async ({ request }) => {
         }),
         {
           status: 500,
-        }
+        },
       );
     }
 
@@ -219,7 +277,7 @@ export const POST: APIRoute = async ({ request }) => {
       }),
       {
         status: 200,
-      }
+      },
     );
   } catch (error) {
     console.error("Error:", error);
@@ -230,7 +288,7 @@ export const POST: APIRoute = async ({ request }) => {
       }),
       {
         status: 500,
-      }
+      },
     );
   }
 };

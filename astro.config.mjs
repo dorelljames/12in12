@@ -1,14 +1,19 @@
 // @ts-check
 import { defineConfig, envField } from "astro/config";
 
-import tailwind from "@astrojs/tailwind";
+import tailwindcss from "@tailwindcss/vite";
 
 import cloudflare from "@astrojs/cloudflare";
 
 // https://astro.build/config
 export default defineConfig({
   output: "server",
-  integrations: [tailwind()],
+  vite: {
+    plugins: [tailwindcss()],
+    // ssr: {
+    //   noExternal: true,
+    // },
+  },
   adapter: cloudflare({
     imageService: "compile",
   }),
@@ -57,6 +62,5 @@ export default defineConfig({
         optional: true,
       }),
     },
-    validateSecrets: false,
   },
 });

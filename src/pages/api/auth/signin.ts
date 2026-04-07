@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { supabase } from "../../../lib/supabase";
+import { supabase, supabaseAdmin } from "../../../lib/supabase";
 import type { Provider } from "@supabase/supabase-js";
 
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
@@ -29,7 +29,24 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   }
 
   try {
-    const { error } = await supabase.auth.signInWithOtp({
+    // Verify user exists in Auth before attempting OTP
+    const {
+      data: { users: matchedUsers },
+    } = await supabaseAdmin.auth.admin.listUsers({
+      filter: `email.eq.${email}`,
+      perPage: 1,
+    });
+
+    if (!matchedUsers || matchedUsers.length === 0) {
+      return redirect(
+        `/signin?error=${encodeURIComponent(
+          "No account associated with this email. Please use the link below to join the community..."
+        )}`
+      );
+    }
+
+    // Use admin client — anon client with PKCE may fail for certain user states
+    const { error } = await supabaseAdmin.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: false,
@@ -37,14 +54,6 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     });
 
     if (error) {
-      // Supabase returns "Signups not allowed for otp" when user doesn't exist
-      if (error.message.includes("not allowed") || error.message.includes("not found")) {
-        return redirect(
-          `/signin?error=${encodeURIComponent(
-            "No account associated with this email. Please use the link below to join the community..."
-          )}`
-        );
-      }
       return redirect(`/signin?error=${encodeURIComponent(error.message)}`);
     }
 

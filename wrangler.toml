@@ -1,3 +1,10 @@
 name = "12in12"
-compatibility_flags = [ "nodejs_compat" ]
-compatibility_date = "2026-04-04"
+compatibility_flags = [ "nodejs_compat", "global_fetch_strictly_public" ]
+compatibility_date = "2026-04-07"
+
+[assets]
+binding = "ASSETS"
+directory = "./dist"
+
+[observability]
+enabled = true

@@ -96,7 +96,10 @@ const { data: latestProjects } = await supabase
 
 <style>
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text text-transparent;
+    background: linear-gradient(to right, #0072c4, #ff3b28);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .animated-words {
