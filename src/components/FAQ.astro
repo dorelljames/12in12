@@ -1,79 +1,54 @@
 ---
 const faqs = [
   {
-    question: "Do I need to follow everything here?",
+    question: "What is a bet?",
     answer:
-      "We follow the 12 in 12 program for a good reason, but feel free to adjust it to your own pace. Prioritize your health and wellbeing as this is not a race, and taking time off when needed is perfectly okay or you tend to your priorities first is perfectly understandable.",
+      "A bet is anything you commit to building — a product, a tool, a game, a community project. It means you're putting your time and skills on the line for something you believe in. The outcome might be revenue, impact, or personal growth.",
   },
   {
-    question: "What tools do I use?",
+    question: "Do I have to build 12 things in 12 months?",
     answer:
-      'You are free to use any tools, including AI and LLMs like <a href="https://chat.openai.com" class="text-primary-600 hover:text-primary-700 underline">ChatGPT</a> for anything including the code, idea, or marketing!',
+      "No. The name \"12 in 12\" is aspirational, not a requirement. You set your own pace. Some builders ship monthly, others take longer on a single bet. What matters is that you're building and sharing your journey.",
   },
   {
-    question: "Should I be spending money now?",
+    question: "What are the three motivations?",
     answer:
-      "This is up to your discretion but for bootstrapping a project, we would minimize our cost and keep everything as close to $0 especially when starting out.",
+      'Every bet has a motivation: <strong>For Profit</strong> (building a business), <strong>For Impact</strong> (solving a problem for a community), or <strong>For Craft</strong> (learning, experimenting, having fun). You pick one when you create a bet, and you can change it if your motivation evolves.',
   },
   {
-    question: "I have zero knowledge on how to get started?",
+    question: "Do I need coding or technical skills?",
     answer:
-      'That\'s perfectly fine! We have a very supportive <a href="/join" class="text-primary-600 hover:text-primary-700 underline">community</a> to help you learn and grow.',
+      'Not at all. Some builders use AI tools to vibe-code their projects, others are experienced developers, and some build non-technical products entirely. Use whatever tools work for you — including <a href="https://claude.ai" class="text-primary-600 hover:text-primary-700 underline">AI assistants</a>.',
   },
   {
-    question: `Isn't a month too short to build and ship?`,
+    question: "What does it cost?",
     answer:
-      "Not necessarily! Keeping the timeline short aligns with Parkinson's Law: work expands or contracts based on the time given. A hard one-month deadline fosters urgency and focus, encouraging prioritization, reduced distractions, and greater efficiency. Feel free to adjust the timeline to your own pace.",
+      "The platform is free. You can create a profile, place bets, share updates, and participate in the community feed at no cost. Paid cohorts with dedicated leads may be offered in the future.",
   },
   {
-    question: "What if I fail to finish in a month?",
+    question: "What if my bet doesn't work out?",
     answer:
-      "That's totally okay! The goal of the program is progress, not perfection. Even if you don't finish in a month, the momentum you've built is a win. You can carry over unfinished goals to the next month or adjust your pace.",
-  },
-  {
-    question: "Do I need coding or technical skills to participate?",
-    answer:
-      'Not at all! While some projects may involve technical skills, many can be creative, service-oriented, or personal development-focused. Check out our <a href="/projects" class="text-primary-600 hover:text-primary-700 underline">projects page</a> to see what others are building. The community and resources are here to support you no matter your starting point.',
-  },
-  {
-    question: "Can I work on more than one project at a time?",
-    answer:
-      "It's recommended to focus on one project per month to ensure deep focus and high-quality results. However, if you feel confident juggling multiple goals, you're welcome to do so!",
-  },
-  {
-    question: "What kind of projects can I work on?",
-    answer:
-      'Anything you\'re passionate about! This could range from launching a small business, writing a book, developing a personal habit, or learning a new skill. Browse our <a href="/projects" class="text-primary-600 hover:text-primary-700 underline">projects gallery</a> for inspiration. The possibilities are endless, and the program is flexible enough to accommodate any goal.',
-  },
-  {
-    question: "How do I stay motivated throughout the month?",
-    answer:
-      'We encourage regular check-ins, accountability groups, and celebrating small wins. Join our <a href="/join" class="text-primary-600 hover:text-primary-700 underline">community</a> to connect with others and stay motivated. The community is here to support you when things get tough, so don\'t hesitate to reach out.',
-  },
-  {
-    question: "How do I know if my project idea is good enough?",
-    answer:
-      "Don't worry about perfection! The program is about taking action and learning along the way. Even if your idea evolves, the experience you gain is invaluable.",
+      "That's part of the story. A parked or canceled bet with an honest reflection is more valuable to the community than a silent disappearance. The platform prompts you to share what happened and what you learned.",
   },
   {
     question: "Do I need to share my progress publicly?",
     answer:
-      'Sharing progress is encouraged but not required. Many find public accountability helpful, but you\'re free to keep your journey private if you prefer. If you do want to share, you can do so on your <a href="/profile" class="text-primary-600 hover:text-primary-700 underline">personalized profile page</a>.',
+      'Sharing is encouraged but not required. Public accountability helps most builders stay on track, and your journey might inspire others. You can share updates on your <a href="/profile" class="text-primary-600 hover:text-primary-700 underline">profile page</a> and in the community feed.',
   },
   {
-    question: "Can I join anytime, or are there specific start dates?",
+    question: "Can I join anytime?",
     answer:
-      "You can join at any time! While many participants align their projects with the calendar month, the program is flexible and can start whenever you're ready.",
+      'Yes — there are no cohort start dates or enrollment windows. <a href="/join" class="text-primary-600 hover:text-primary-700 underline">Join</a>, create your profile, and place your first bet whenever you\'re ready.',
   },
   {
-    question: "How do I join the community?",
+    question: "How is this different from a project tracker?",
     answer:
-      'Joining the community is easy — just head over to the <a href="/join" class="text-primary-600 hover:text-primary-700 underline">join page</a>, fill out the form and follow the instructions. You\'ll find plenty of resources and friendly faces to welcome you.',
+      "Project trackers show status. 12in12 shows the story. When you change your bet's status, the platform prompts you to share the narrative — your thesis, your progress, your outcome. That story is what the community reads and learns from.",
   },
   {
-    question: "What happens after 12 months?",
+    question: "Who is behind 12in12?",
     answer:
-      "That's entirely up to you! Some participants repeat the program with new goals, while others use what they've learned to pursue larger projects. The experience is designed to set you up for long-term growth.",
+      'It\'s built by <a href="/dorelljames" class="text-primary-600 hover:text-primary-700 underline">Dorell James</a>, a builder who wanted a community to share the journey of shipping products. The platform itself is one of his bets.',
   },
 ];
 ---
