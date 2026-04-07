@@ -86,6 +86,16 @@ const getMotivationConfig = (motivation?: string) => {
   return motivation ? configs[motivation] : null;
 };
 
+const getTypeConfig = (type: string) => {
+  const configs: Record<string, { emoji: string; label: string; dotColor: string }> = {
+    progress: { emoji: "📈", label: "Progress", dotColor: "bg-blue-500" },
+    milestone: { emoji: "🏆", label: "Milestone", dotColor: "bg-amber-500" },
+    launch: { emoji: "🚀", label: "Launch", dotColor: "bg-emerald-500" },
+    learning: { emoji: "💡", label: "Learning", dotColor: "bg-purple-500" },
+  };
+  return configs[type] || configs.progress;
+};
+
 const completedCount = (products || []).filter(
   (p: Product) => p.status === "completed"
 ).length;
@@ -443,88 +453,67 @@ const jsonLd = {
             }
           </div>
 
-          {/* Updates List */}
-          <div class="space-y-4">
+          {/* Updates Timeline */}
+          <div>
             {
               updates && updates.length > 0 ? (
-                updates.map((update: Update) => (
-                  <div class="bg-gray-800 rounded-lg border border-gray-700 p-4 hover:shadow-lg transition-shadow">
-                    <div class="flex items-center justify-between mb-2">
-                      <div class="flex items-center gap-2">
-                        <span
-                          class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                          ${
-                            update.type === "milestone"
-                              ? "bg-purple-900/50 text-purple-200 border border-purple-700/50"
-                              : update.type === "progress"
-                                ? "bg-blue-900/50 text-blue-200 border border-blue-700/50"
-                                : update.type === "launch"
-                                  ? "bg-emerald-900/50 text-emerald-200 border border-emerald-700/50"
-                                  : "bg-amber-900/50 text-amber-200 border border-amber-700/50"
-                          }`}
-                        >
-                          {update.type === "milestone"
-                            ? "🏆"
-                            : update.type === "progress"
-                              ? "📈"
-                              : update.type === "launch"
-                                ? "🚀"
-                                : "💡"}{" "}
-                          {update.type.charAt(0).toUpperCase() +
-                            update.type.slice(1)}
-                        </span>
-                        {update.product_id && (
-                          <>
-                            <span class="text-gray-600">•</span>
-                            <span class="text-sm text-gray-300">
-                              {update.products?.title}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      <div class="flex items-center gap-3">
-                        <time class="text-sm text-gray-400">
-                          {new Date(update.created_at).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )}
-                        </time>
-                        {isOwned && (
-                          <button
-                            type="button"
-                            class="text-gray-500 hover:text-gray-300"
-                            onclick={`window.showEditModal(${JSON.stringify({
-                              id: update.id,
-                              type: update.type,
-                              content: update.content,
-                              product_id: update.product_id,
-                            })})`}
-                          >
-                            <svg
-                              class="w-4 h-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                              />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <p class="text-gray-300 text-sm whitespace-pre-wrap">
-                      {update.content}
-                    </p>
+                <div class="relative">
+                  {/* Vertical line */}
+                  <div class="absolute left-[39px] top-0 bottom-0 w-px bg-gray-700"></div>
+
+                  <div class="space-y-1">
+                    {updates.map((update: Update) => {
+                      const typeConfig = getTypeConfig(update.type);
+                      const day = new Date(update.created_at).getDate();
+                      const monthStr = new Date(update.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+                      return (
+                        <div class="relative flex gap-4 py-3 group">
+                          {/* Day + dot */}
+                          <div class="flex items-center gap-2.5 shrink-0">
+                            <span class="text-xs font-mono text-gray-500 w-6 text-right">{day}</span>
+                            <div class={`w-2.5 h-2.5 rounded-full ring-4 ring-gray-900 ${typeConfig.dotColor}`}></div>
+                          </div>
+
+                          {/* Content */}
+                          <div class="flex-1 min-w-0 pb-3 border-b border-gray-800/50 group-last:border-0">
+                            <div class="flex items-center gap-2 mb-1">
+                              <span class={`text-xs font-medium ${update.type === "milestone" ? "text-amber-400" : update.type === "launch" ? "text-emerald-400" : update.type === "learning" ? "text-purple-400" : "text-blue-400"}`}>
+                                {typeConfig.emoji} {typeConfig.label}
+                              </span>
+                              {update.product_id && update.products && (
+                                <>
+                                  <span class="text-gray-600">·</span>
+                                  <span class="text-xs text-gray-400">{update.products.title}</span>
+                                </>
+                              )}
+                              <span class="text-xs text-gray-600 ml-auto">{monthStr}</span>
+                              {isOwned && (
+                                <button
+                                  type="button"
+                                  class="text-gray-600 hover:text-gray-300"
+                                  onclick={`window.showEditModal(${JSON.stringify({
+                                    id: update.id,
+                                    type: update.type,
+                                    content: update.content,
+                                    product_id: update.product_id,
+                                  })})`}
+                                >
+                                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                            <p class="text-sm text-gray-300 whitespace-pre-line leading-relaxed">
+                              {update.content}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))
+                </div>
               ) : (
                 <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700/50 text-center">
                   <div class="mx-auto w-16 h-16 mb-4 rounded-full bg-gray-700/50 flex items-center justify-center">
