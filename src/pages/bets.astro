@@ -66,18 +66,14 @@ const title = status
       .split("_")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ")} Bets - 12 in 12`
-  : month
-    ? `${month} Bets - 12 in 12`
-    : "All Builder Bets - 12 in 12";
+  : "All Builder Bets - 12 in 12";
 
 const description = status
   ? `Discover ${stats[status.replace("_", "") + "ed"] || stats[status.replace("_", "")]} ${status
       .split("_")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ")} bets placed by our community of builders.`
-  : month
-    ? `Explore bets being made by our community in ${month}. Join us in betting on yourself as a builder!`
-    : `Discover ${stats.total} bets placed by our community of builders. From shipped bets to work in progress, see what everyone is building.`;
+  : `Discover ${stats.total} bets placed by our community of builders. From shipped bets to work in progress, see what everyone is building.`;
 
 // Prepare JSON-LD structured data
 const jsonLd = {
