@@ -1,8 +1,5 @@
 @import "tailwindcss";
-
-@layer utilities {
-  @reference from-primary-600;
-}
+@config "../../tailwind.config.mjs";
 
 /* Additional custom styles */
 .text-gradient {
