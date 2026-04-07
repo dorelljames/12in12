@@ -106,8 +106,8 @@ const description = "See what builders are shipping, learning, and launching in 
 
               {/* Timeline entries for this month */}
               <div class="relative">
-                {/* Vertical line */}
-                <div class="absolute left-[19px] top-0 bottom-0 w-px bg-gray-800"></div>
+                {/* Vertical line — centered on the dot column */}
+                <div class="absolute left-[39px] top-0 bottom-0 w-px bg-gray-800"></div>
 
                 <div class="space-y-1">
                   {group.updates.map((update) => {
@@ -119,9 +119,9 @@ const description = "See what builders are shipping, learning, and launching in 
                     return (
                       <div class="relative flex gap-4 py-3 group">
                         {/* Day + dot */}
-                        <div class="flex items-start gap-2 shrink-0 w-10">
-                          <span class="text-xs font-mono text-gray-500 w-5 text-right pt-0.5">{day}</span>
-                          <div class={`w-2.5 h-2.5 rounded-full mt-1.5 ring-4 ring-gray-900 ${typeConfig.dotColor}`}></div>
+                        <div class="flex items-center gap-2.5 shrink-0">
+                          <span class="text-xs font-mono text-gray-500 w-6 text-right">{day}</span>
+                          <div class={`w-2.5 h-2.5 rounded-full ring-4 ring-gray-900 ${typeConfig.dotColor}`}></div>
                         </div>
 
                         {/* Content */}
