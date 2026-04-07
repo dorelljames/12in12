@@ -16,7 +16,6 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.51",
     "@astrojs/cloudflare": "^13.1.7",
-    "@notionhq/client": "^2.2.15",
     "@supabase/supabase-js": "^2.101.1",
     "@tailwindcss/vite": "^4.2.2",
     "ai": "^6.0.149",

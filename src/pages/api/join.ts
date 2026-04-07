@@ -1,16 +1,48 @@
 import type { APIRoute } from "astro";
-import { Client } from "@notionhq/client";
 import { supabaseAdmin as supabase } from "../../lib/supabase";
 import {
   PUBLIC_NOTION_TOKEN,
   PUBLIC_NOTION_DATABASE_ID,
 } from "astro:env/server";
 
-const notion = new Client({
-  auth: PUBLIC_NOTION_TOKEN,
-});
-
 const DATABASE_ID = PUBLIC_NOTION_DATABASE_ID;
+
+type JoinEntry = {
+  name: string;
+  email: string;
+  reason: string;
+  username: string;
+};
+
+async function createNotionJoinEntry({
+  name,
+  email,
+  reason,
+  username,
+}: JoinEntry) {
+  const response = await fetch("https://api.notion.com/v1/pages", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${PUBLIC_NOTION_TOKEN}`,
+      "Content-Type": "application/json",
+      "Notion-Version": "2022-06-28",
+    },
+    body: JSON.stringify({
+      parent: { database_id: DATABASE_ID },
+      properties: {
+        Name: { title: [{ text: { content: name } }] },
+        Email: { email },
+        Reason: { rich_text: [{ text: { content: reason } }] },
+        Username: { rich_text: [{ text: { content: username } }] },
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(`Notion page creation failed: ${message}`);
+  }
+}
 
 // Look up auth user ID by email via direct DB query (RPC)
 // admin.listUsers filter is broken, so we use a Postgres function instead
@@ -149,15 +181,11 @@ export const POST: APIRoute = async ({ request }) => {
       },
     });
 
-    // Create Notion entry
-    await notion.pages.create({
-      parent: { database_id: DATABASE_ID },
-      properties: {
-        Name: { title: [{ text: { content: name! } }] },
-        Email: { email: email! },
-        Reason: { rich_text: [{ text: { content: reason! } }] },
-        Username: { rich_text: [{ text: { content: username! } }] },
-      },
+    await createNotionJoinEntry({
+      name: name!,
+      email: email!,
+      reason: reason!,
+      username: username!,
     });
 
     // Create profile
