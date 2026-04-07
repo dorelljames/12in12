@@ -51,6 +51,11 @@ export default defineConfig({
         access: "public",
         default: "https://discord.gg/SGXHPpCTZ4",
       }),
+      OPENAI_API_KEY: envField.string({
+        context: "server",
+        access: "secret",
+        optional: true,
+      }),
     },
     validateSecrets: false,
   },

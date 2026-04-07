@@ -177,9 +177,25 @@ const today = new Date().toISOString().split("T")[0];
               <p class="text-sm text-emerald-400 font-medium" id="promptTitle">What's your thesis?</p>
               <p class="text-xs text-gray-400" id="promptHint">Who is this for and why do you believe it will work?</p>
             </div>
-            <label class="block text-sm font-medium text-gray-200 mb-2">
-              Description
-            </label>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-medium text-gray-200">
+                Description
+              </label>
+              <button
+                type="button"
+                id="enhanceDescBtn"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-purple-400 bg-purple-900/30 border border-purple-700/50 rounded-lg hover:bg-purple-900/50 hover:text-purple-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg class="w-3.5 h-3.5" id="enhanceIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                </svg>
+                <span id="enhanceBtnText">Polish with AI</span>
+                <svg id="enhanceSpinner" class="hidden w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </button>
+            </div>
             <textarea
               name="description"
               rows="3"
@@ -231,9 +247,21 @@ const today = new Date().toISOString().split("T")[0];
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-200 mb-2">
-              Lessons Learned
-            </label>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-medium text-gray-200">
+                Lessons Learned
+              </label>
+              <button
+                type="button"
+                id="enhanceLessonsBtn"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-purple-400 bg-purple-900/30 border border-purple-700/50 rounded-lg hover:bg-purple-900/50 hover:text-purple-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                </svg>
+                <span>Polish with AI</span>
+              </button>
+            </div>
             <textarea
               name="lessons_learned"
               rows="3"
@@ -717,6 +745,60 @@ const today = new Date().toISOString().split("T")[0];
 
   // Initialize narrative prompt on load
   updateNarrativePrompt();
+
+  // AI enhance functionality
+  async function enhanceText(textarea: HTMLTextAreaElement, field: string, button: HTMLButtonElement) {
+    const text = textarea.value.trim();
+    if (text.length < 5) {
+      alert("Write at least a few words first, then polish with AI.");
+      return;
+    }
+
+    const btnText = button.querySelector("span");
+    const spinner = button.querySelector("[id$='Spinner']") || button.querySelector(".animate-spin");
+    const icon = button.querySelector("[id$='Icon']") || button.querySelector("svg:first-child");
+
+    button.disabled = true;
+    if (btnText) btnText.textContent = "Polishing...";
+    if (spinner) spinner.classList.remove("hidden");
+    if (icon) icon.classList.add("hidden");
+
+    try {
+      const response = await fetch("/api/ai/enhance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, field }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to enhance");
+      }
+
+      const { enhanced } = await response.json();
+      textarea.value = enhanced;
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to polish text");
+    } finally {
+      button.disabled = false;
+      if (btnText) btnText.textContent = "Polish with AI";
+      if (spinner) spinner.classList.add("hidden");
+      if (icon) icon.classList.remove("hidden");
+    }
+  }
+
+  const enhanceDescBtn = document.getElementById("enhanceDescBtn") as HTMLButtonElement;
+  const enhanceLessonsBtn = document.getElementById("enhanceLessonsBtn") as HTMLButtonElement;
+  const descTextarea = projectForm?.querySelector('[name="description"]') as HTMLTextAreaElement;
+  const lessonsTextarea = projectForm?.querySelector('[name="lessons_learned"]') as HTMLTextAreaElement;
+
+  enhanceDescBtn?.addEventListener("click", () => {
+    if (descTextarea) enhanceText(descTextarea, "description", enhanceDescBtn);
+  });
+
+  enhanceLessonsBtn?.addEventListener("click", () => {
+    if (lessonsTextarea) enhanceText(lessonsTextarea, "lessons_learned", enhanceLessonsBtn);
+  });
 
   // Declare the showProjectModal function type for TypeScript
   declare global {
