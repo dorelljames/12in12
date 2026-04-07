@@ -1,12 +1,12 @@
 ---
 import { supabase } from "../lib/supabase";
 
-const currentMonth = new Date().toLocaleString("default", { month: "long" });
 const { data: latestProjects } = await supabase
   .from("products")
   .select("id")
   .in("status", ["in_progress"])
-  .eq("month", currentMonth);
+  .order("created_at", { ascending: false })
+  .limit(20);
 ---
 
 <section class="relative overflow-hidden bg-slate-900 pt-20 pb-28 sm:py-32">
@@ -23,7 +23,7 @@ const { data: latestProjects } = await supabase
         <div class="h-2 w-2 mt-2 rounded-full bg-emerald-500 animate-pulse">
         </div>
         <span class="text-sm font-medium text-slate-200"
-          >WIP: {latestProjects?.length} new bets {currentMonth} 😇</span
+          >WIP: {latestProjects?.length} active bets right now 😇</span
         >
       </div>
 
