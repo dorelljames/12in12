@@ -386,6 +386,41 @@ const today = new Date().toISOString().split("T")[0];
   </div>
 </div>
 
+<!-- Motivation change prompt overlay -->
+<div
+  id="motivationChangePrompt"
+  class="hidden fixed inset-0 bg-gray-900/90 backdrop-blur-sm overflow-y-auto h-full w-full z-[60]"
+>
+  <div
+    class="relative top-32 mx-auto p-6 border w-full max-w-lg shadow-lg rounded-xl bg-gray-800 border-gray-700"
+  >
+    <h3 class="text-lg font-medium text-white mb-2">Your motivation shifted</h3>
+    <p id="motivationChangeSubtitle" class="text-sm text-gray-400 mb-4"></p>
+    <textarea
+      id="motivationChangeText"
+      rows="4"
+      class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+      placeholder="What changed? What made you see this differently?"
+    ></textarea>
+    <div class="flex justify-end gap-3 mt-4">
+      <button
+        id="motivationChangeSkip"
+        type="button"
+        class="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+      >
+        Skip
+      </button>
+      <button
+        id="motivationChangeSave"
+        type="button"
+        class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
+      >
+        Save & Continue
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
   const modal = document.getElementById("projectModal");
   const closeButton = document.getElementById("closeProjectModal");
@@ -402,6 +437,9 @@ const today = new Date().toISOString().split("T")[0];
   const statusSelect = projectForm?.querySelector(
     '[name="status"]'
   ) as HTMLSelectElement;
+
+  // Track original motivation for change detection
+  let originalMotivation: string | null = null;
 
   const prompts: Record<string, Record<string, { title: string; hint: string }>> = {
     not_started: {
@@ -559,6 +597,9 @@ const today = new Date().toISOString().split("T")[0];
       if (deadlineInput)
         deadlineInput.value = projectData.deadline || "";
 
+      // Track original motivation for change detection
+      originalMotivation = projectData.motivation || null;
+
       // Set motivation radio
       if (projectData.motivation) {
         const motivationRadio = projectForm.querySelector(
@@ -628,8 +669,27 @@ const today = new Date().toISOString().split("T")[0];
       });
 
       if (response.ok) {
-        hideModal();
-        window.location.reload();
+        const result = await response.json();
+        const newMotivation = data.motivation || null;
+
+        // Detect motivation change on edit
+        if (
+          isEdit &&
+          originalMotivation &&
+          newMotivation &&
+          originalMotivation !== newMotivation
+        ) {
+          hideModal();
+          showMotivationChangePrompt(
+            originalMotivation,
+            newMotivation,
+            data.id,
+            data.profileId
+          );
+        } else {
+          hideModal();
+          window.location.reload();
+        }
       } else {
         const errorData = await response.json();
         throw new Error(
@@ -799,6 +859,78 @@ const today = new Date().toISOString().split("T")[0];
   enhanceLessonsBtn?.addEventListener("click", () => {
     if (lessonsTextarea) enhanceText(lessonsTextarea, "lessons_learned", enhanceLessonsBtn);
   });
+
+  // Motivation change prompt
+  const motivationLabels: Record<string, string> = {
+    profit: "For Profit",
+    impact: "For Impact",
+    craft: "For Craft",
+  };
+
+  function showMotivationChangePrompt(
+    oldMotivation: string,
+    newMotivation: string,
+    betId: string,
+    profileId: string
+  ) {
+    const overlay = document.getElementById("motivationChangePrompt");
+    const subtitle = document.getElementById("motivationChangeSubtitle");
+    const textarea = document.getElementById("motivationChangeText") as HTMLTextAreaElement;
+    const saveBtn = document.getElementById("motivationChangeSave") as HTMLButtonElement;
+    const skipBtn = document.getElementById("motivationChangeSkip") as HTMLButtonElement;
+
+    if (!overlay || !subtitle || !textarea) return;
+
+    const oldLabel = motivationLabels[oldMotivation] || oldMotivation;
+    const newLabel = motivationLabels[newMotivation] || newMotivation;
+    subtitle.textContent = `This bet started as "${oldLabel}" and is now "${newLabel}". What changed?`;
+    textarea.value = "";
+    overlay.classList.remove("hidden");
+    textarea.focus();
+
+    const cleanup = () => {
+      overlay.classList.add("hidden");
+      saveBtn.removeEventListener("click", onSave);
+      skipBtn.removeEventListener("click", onSkip);
+    };
+
+    const onSkip = () => {
+      cleanup();
+      window.location.reload();
+    };
+
+    const onSave = async () => {
+      const content = textarea.value.trim();
+      if (!content) {
+        onSkip();
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving...";
+
+      try {
+        await fetch("/api/updates", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "milestone",
+            content: `**Motivation shifted: ${oldLabel} → ${newLabel}**\n\n${content}`,
+            profileId,
+            productId: betId,
+          }),
+        });
+      } catch (e) {
+        // Best effort — don't block the user
+      }
+
+      cleanup();
+      window.location.reload();
+    };
+
+    saveBtn.addEventListener("click", onSave);
+    skipBtn.addEventListener("click", onSkip);
+  }
 
   // Declare the showProjectModal function type for TypeScript
   declare global {

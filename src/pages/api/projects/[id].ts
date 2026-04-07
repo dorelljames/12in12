@@ -50,7 +50,7 @@ export const PUT: APIRoute = async ({ request, cookies, params }) => {
     // Get the project to verify ownership
     const { data: project, error: projectError } = await supabase
       .from("products")
-      .select("profile_id, title")
+      .select("profile_id, title, motivation")
       .eq("id", id)
       .single();
 
@@ -128,9 +128,10 @@ export const PUT: APIRoute = async ({ request, cookies, params }) => {
       );
     }
 
-    return new Response(JSON.stringify(data), {
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({ ...data, oldMotivation: project.motivation }),
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Error processing request:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
