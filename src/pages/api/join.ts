@@ -12,21 +12,14 @@ const notion = new Client({
 
 const DATABASE_ID = PUBLIC_NOTION_DATABASE_ID;
 
-// admin.listUsers filter is broken — iterate to find user by email
-async function findUserByEmail(email: string) {
-  let page = 1;
-  const perPage = 50;
-  while (true) {
-    const {
-      data: { users },
-      error,
-    } = await supabase.auth.admin.listUsers({ page, perPage });
-    if (error || !users || users.length === 0) return null;
-    const found = users.find((u) => u.email === email);
-    if (found) return found;
-    if (users.length < perPage) return null;
-    page++;
-  }
+// Look up auth user ID by email via direct DB query (RPC)
+// admin.listUsers filter is broken, so we use a Postgres function instead
+async function findUserIdByEmail(email: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc("get_user_id_by_email", {
+    lookup_email: email,
+  });
+  if (error || !data) return null;
+  return data as string;
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -106,8 +99,8 @@ export const POST: APIRoute = async ({ request }) => {
         createError.message.includes("already been registered")
       ) {
         // Email already exists in Auth — check if they have a profile
-        const existingUser = await findUserByEmail(email!);
-        if (!existingUser) {
+        const existingUserId = await findUserIdByEmail(email!);
+        if (!existingUserId) {
           return new Response(
             JSON.stringify({
               success: false,
@@ -120,7 +113,7 @@ export const POST: APIRoute = async ({ request }) => {
         const { data: existingUserProfile } = await supabase
           .from("profiles")
           .select("id")
-          .eq("user_id", existingUser.id)
+          .eq("user_id", existingUserId)
           .single();
 
         if (existingUserProfile) {
@@ -135,7 +128,7 @@ export const POST: APIRoute = async ({ request }) => {
         }
 
         // Orphaned auth user — recover by creating profile below
-        authUserId = existingUser.id;
+        authUserId = existingUserId;
       } else {
         return new Response(
           JSON.stringify({ success: false, error: createError.message }),
