@@ -7,9 +7,10 @@ const lastUpdated = "January 13, 2025";
 ---
 
 <Layout title="Privacy Policy - 12 in 12">
-  <Navbar />
+  <div class="min-h-screen flex flex-col">
+    <Navbar />
 
-  <main class="min-h-screen bg-slate-900 pt-32 pb-16">
+    <main class="flex-1 bg-slate-900 pt-32 pb-16">
     <div class="container mx-auto px-4">
       <div class="max-w-3xl mx-auto">
         <h1 class="text-4xl font-bold text-white mb-4">Privacy Policy</h1>
@@ -124,7 +125,8 @@ const lastUpdated = "January 13, 2025";
     </div>
   </main>
 
-  <Footer />
+    <Footer />
+  </div>
 </Layout>
 
 <style>
@@ -132,7 +134,7 @@ const lastUpdated = "January 13, 2025";
     font-size: 1.5rem;
     line-height: 2rem;
     font-weight: 700;
-    color: #0f172a;
+    color: #f1f5f9;
     margin-top: 3rem;
     margin-bottom: 1.5rem;
   }
@@ -140,19 +142,19 @@ const lastUpdated = "January 13, 2025";
     font-size: 1.25rem;
     line-height: 1.75rem;
     font-weight: 600;
-    color: #0f172a;
+    color: #e2e8f0;
     margin-top: 2rem;
     margin-bottom: 1rem;
   }
   .prose p {
-    color: #475569;
+    color: #cbd5e1;
     margin-bottom: 1rem;
     line-height: 1.625;
   }
   .prose ul {
     list-style-type: disc;
     list-style-position: inside;
-    color: #475569;
+    color: #cbd5e1;
     margin-bottom: 1rem;
   }
   .prose ul > * + * {
@@ -161,7 +163,7 @@ const lastUpdated = "January 13, 2025";
   .prose .lead {
     font-size: 1.125rem;
     line-height: 1.75rem;
-    color: #334155;
+    color: #94a3b8;
     margin-bottom: 2rem;
   }
 </style>
