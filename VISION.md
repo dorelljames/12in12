@@ -10,7 +10,7 @@ The name "12 in 12" started as a challenge: build 12 products in 12 months. The 
 
 12in12 launched with the "build 12 products in 12 months" pitch. Real builders showed up and joined. But over time, it died down — the strict pace was hard to sustain, and energy faded.
 
-Coming back to it now, the motivation is different. Building [hapsay.com](https://hapsay.com) created something solid — a real product with real traction that's worth sharing the journey of. But building is lonely. Having something to show is only half of it. The other half is having people to share it with, learn from, and build alongside.
+Coming back to it now, the motivation is different. Actively building [hapsay.com](https://hapsay.com) created something solid to rally around and share the journey of. But building is lonely. Having something to show is only half of it. The other half is having people to share it with, learn from, and build alongside.
 
 That's the real reason 12in12 is being revived: not just as a tracker, but as the community that makes building less lonely. Feedback from the original launch was clear — the 1-product-per-month pace was too rigid. Some couldn't sustain it. Others wanted in but felt intimidated. The energy was there. The format needed to flex.
 
