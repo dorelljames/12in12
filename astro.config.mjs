@@ -20,6 +20,7 @@ export default defineConfig({
     "/register": "/signin",
     "/forgot-password": "/signin",
     "/forgot": "/signin",
+    "/projects": "/bets",
   },
   env: {
     schema: {

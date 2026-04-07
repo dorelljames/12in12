@@ -1,300 +1,296 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
+import Banner from "../components/Banner.astro";
 import Hero from "../components/Hero.astro";
 import Features from "../components/Features.astro";
-import Benefits from "../components/Benefits.astro";
 import HowItWorks from "../components/HowItWorks.astro";
 import FAQ from "../components/FAQ.astro";
 import CTA from "../components/CTA.astro";
 import Footer from "../components/Footer.astro";
 import { supabase } from "../lib/supabase";
 
-// Fetch latest active bets (no month filter — show recent activity)
-const { data: latestProjects } = await supabase
+// Fetch latest active bets
+const { data: latestBets } = await supabase
   .from("products")
-  .select(
-    `
+  .select(`
     *,
     profiles:profile_id (
       username,
       full_name,
       avatar_url
     )
-  `
-  )
+  `)
   .in("status", ["in_progress", "completed"])
   .order("created_at", { ascending: false })
   .limit(6);
 
+// Fetch recent updates for live feed preview
+const { data: rawUpdates } = await supabase
+  .from("product_updates")
+  .select(`
+    *,
+    profiles:profile_id (
+      username,
+      full_name,
+      avatar_url
+    ),
+    products:product_id (
+      title,
+      slug
+    )
+  `)
+  .order("created_at", { ascending: false })
+  .limit(5);
+
+// Pre-process updates to avoid template compilation issues
+const recentUpdates = (rawUpdates || []).map((u: any) => ({
+  type: u.type,
+  created_at: u.created_at,
+  profileUrl: "/" + (u.profiles?.username || "builder"),
+  avatarUrl: u.profiles?.avatar_url || "",
+  displayName: u.profiles?.full_name || u.profiles?.username || "Builder",
+  initial: (u.profiles?.username || "?")[0].toUpperCase(),
+  productUrl: u.products?.slug ? "/projects/" + u.products.slug : "",
+  productTitle: u.products?.title || "",
+}));
+
+// Fetch featured builders (those with the most bets)
+const { data: builders } = await supabase
+  .from("profiles")
+  .select("username, full_name, avatar_url")
+  .not("username", "is", null)
+  .not("avatar_url", "is", null)
+  .limit(8);
+
+const getTypeConfig = (type: string) => {
+  const configs: Record<string, { emoji: string; label: string }> = {
+    progress: { emoji: "📈", label: "Progress" },
+    milestone: { emoji: "🏆", label: "Milestone" },
+    launch: { emoji: "🚀", label: "Launch" },
+    learning: { emoji: "💡", label: "Learning" },
+  };
+  return configs[type] || configs.progress;
+};
+
+const timeAgo = (date: string) => {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
 // Prepare SEO metadata
 const title = "12 in 12 - Bet on Yourself as a Builder";
 const description =
-  "Join a community of builders betting on themselves. Ship 12 bets in 12 months, share your journey, get feedback, and stay accountable.";
+  "Join a community of builders betting on themselves. Build a business, make an impact, or sharpen your craft — share your journey and ship.";
 
-// Prepare JSON-LD structured data
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "12 in 12",
   description,
   url: Astro.url.origin,
-  potentialAction: {
-    "@type": "JoinAction",
-    target: {
-      "@type": "EntryPoint",
-      urlTemplate: `${Astro.url.origin}/signin`,
-      description: "Join the 12 in 12 challenge",
-    },
-  },
-  about: {
-    "@type": "Thing",
-    name: "12 Bets in 12 Months Challenge",
-    description:
-      "A community challenge to bet on yourself and ship one project every month for a year",
-  },
-  ...(latestProjects?.length && {
-    hasPart: {
-      "@type": "ItemList",
-      itemListElement: latestProjects.map((project, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        item: {
-          "@type": "SoftwareApplication",
-          name: project.title,
-          description: project.description,
-          author: {
-            "@type": "Person",
-            name: project.profiles.full_name || project.profiles.username,
-            url: `${Astro.url.origin}/${project.profiles.username}`,
-          },
-        },
-      })),
-    },
-  }),
 };
 ---
 
 <Layout title={title}>
   <head slot="head">
-    <!-- Primary Meta Tags -->
     <meta name="title" content={title} />
     <meta name="description" content={description} />
-
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={Astro.url.origin} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta
-      property="og:image"
-      content={`${Astro.url.origin}/images/og-home.png`}
-    />
-
-    <!-- Twitter -->
+    <meta property="og:image" content={`${Astro.url.origin}/images/og-home.png`} />
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content={Astro.url.origin} />
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
-    <meta
-      property="twitter:image"
-      content={`${Astro.url.origin}/images/og-home.png`}
-    />
-
-    <!-- Canonical URL -->
+    <meta property="twitter:image" content={`${Astro.url.origin}/images/og-home.png`} />
     <link rel="canonical" href={Astro.url.origin} />
-
-    <!-- Structured Data -->
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
 
+  <Banner />
   <Navbar />
   <main>
     <Hero />
-    <Features />
-    <Benefits />
 
-    {/* Latest Projects Section */}
+    {/* Live Activity — social proof that this is alive */}
+    {recentUpdates.length > 0 && (
+      <section class="py-16 bg-gray-900 border-t border-gray-800">
+        <div class="container mx-auto px-4 max-w-3xl">
+          <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-3">
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <h2 class="text-xl font-bold text-white">Live from the community</h2>
+            </div>
+            <a href="/feed" class="text-sm text-gray-400 hover:text-emerald-400 transition-colors">View all &rarr;</a>
+          </div>
+
+          <ul class="space-y-3">
+            {recentUpdates.map((u) => {
+              const tc = getTypeConfig(u.type);
+              return (
+                <li class="flex items-start gap-3 py-2">
+                  <a href={u.profileUrl} class="shrink-0">
+                    <img src={u.avatarUrl || "/favicon.svg"} alt="" class="w-8 h-8 rounded-full" />
+                  </a>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-300">
+                      <a href={u.profileUrl} class="font-medium text-white hover:text-emerald-400 transition-colors">{u.displayName}</a>
+                      {" posted a " + tc.emoji + " " + tc.label.toLowerCase()}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-0.5">{timeAgo(u.created_at)}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+    )}
+
+    {/* Builders — show real faces */}
+    {builders && builders.length > 0 && (
+      <section class="py-12 bg-gray-900">
+        <div class="container mx-auto px-4">
+          <div class="text-center mb-8">
+            <h2 class="text-xl font-bold text-white mb-2">Builders in the community</h2>
+            <p class="text-sm text-gray-400">Real people betting on themselves</p>
+          </div>
+          <div class="flex flex-wrap items-center justify-center gap-4">
+            {builders.map((builder) => (
+              <a
+                href={`/${builder.username}`}
+                class="group flex flex-col items-center gap-1.5"
+                title={builder.full_name || builder.username}
+              >
+                <img
+                  src={builder.avatar_url}
+                  alt={builder.full_name || builder.username}
+                  class="w-12 h-12 rounded-full ring-2 ring-gray-700 group-hover:ring-emerald-500 transition-all"
+                />
+                <span class="text-xs text-gray-500 group-hover:text-gray-300 transition-colors">
+                  {builder.full_name?.split(" ")[0] || builder.username}
+                </span>
+              </a>
+            ))}
+            <a
+              href="/join"
+              class="flex flex-col items-center gap-1.5 group"
+            >
+              <div class="w-12 h-12 rounded-full ring-2 ring-dashed ring-gray-600 flex items-center justify-center group-hover:ring-emerald-500 transition-all">
+                <svg class="w-5 h-5 text-gray-500 group-hover:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <span class="text-xs text-gray-500 group-hover:text-emerald-400 transition-colors">You?</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <Features />
+
+    {/* Latest Bets */}
     <section class="py-24 bg-slate-900">
       <div class="container mx-auto px-4">
         <div class="max-w-3xl mx-auto text-center mb-16">
-          <h2 class="text-4xl font-bold text-slate-100 mb-4">
-            Latest Bets
-          </h2>
+          <h2 class="text-4xl font-bold text-slate-100 mb-4">Latest Bets</h2>
           <p class="text-lg text-slate-300">
             Check out what our builders are betting on right now
           </p>
         </div>
 
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
-        >
-          {
-            latestProjects?.map((project) => (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {latestBets?.map((project) => {
+            const statusConfig = {
+              completed: { bg: "bg-green-900/50", text: "text-green-300", border: "border-green-700/50", label: "Shipped" },
+              in_progress: { bg: "bg-primary-900/50", text: "text-primary-300", border: "border-primary-700/50", label: "Building" },
+              not_started: { bg: "bg-slate-900/50", text: "text-slate-300", border: "border-slate-700/50", label: "Planned" },
+              canceled: { bg: "bg-red-900/50", text: "text-red-300", border: "border-red-700/50", label: "Canceled" },
+              parked: { bg: "bg-yellow-900/50", text: "text-yellow-300", border: "border-yellow-700/50", label: "Parked" },
+            };
+            const config = statusConfig[project.status] || statusConfig.not_started;
+
+            return (
               <div class="bg-slate-800/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-700/50 overflow-hidden group hover:border-primary-500/30">
-                {/* Project Thumbnail */}
                 <div class="relative h-48 bg-slate-800">
                   {project.thumbnail_url ? (
-                    <img
-                      src={project.thumbnail_url}
-                      alt={project.title}
-                      class="w-full h-full object-cover"
-                    />
+                    <img src={project.thumbnail_url} alt={project.title} class="w-full h-full object-cover" />
                   ) : (
                     <div class="flex items-center justify-center h-full bg-gradient-to-br from-slate-800 to-slate-900">
-                      <span class="text-slate-500">🏗️ Building</span>
+                      <span class="text-slate-500">{project.status === "completed" ? "✅ Shipped" : "🏗️ Building"}</span>
                     </div>
                   )}
                   <div class="absolute top-4 right-4">
-                    {(() => {
-                      type StatusConfig = {
-                        [key: string]: {
-                          bg: string;
-                          text: string;
-                          border: string;
-                          label: string;
-                        };
-                      };
-
-                      const statusConfig: StatusConfig = {
-                        completed: {
-                          bg: "bg-green-900/50",
-                          text: "text-green-300",
-                          border: "border-green-700/50",
-                          label: "Completed",
-                        },
-                        in_progress: {
-                          bg: "bg-primary-900/50",
-                          text: "text-primary-300",
-                          border: "border-primary-700/50",
-                          label: "In Progress",
-                        },
-                        not_started: {
-                          bg: "bg-slate-900/50",
-                          text: "text-slate-300",
-                          border: "border-slate-700/50",
-                          label: "Not Started",
-                        },
-                        canceled: {
-                          bg: "bg-red-900/50",
-                          text: "text-red-300",
-                          border: "border-red-700/50",
-                          label: "Canceled",
-                        },
-                        parked: {
-                          bg: "bg-yellow-900/50",
-                          text: "text-yellow-300",
-                          border: "border-yellow-700/50",
-                          label: "Parked",
-                        },
-                      };
-
-                      const config = statusConfig[
-                        project.status as keyof typeof statusConfig
-                      ] || {
-                        bg: "bg-slate-900/50",
-                        text: "text-slate-300",
-                        border: "border-slate-700/50",
-                        label: "Unknown",
-                      };
-
-                      return (
-                        <span
-                          class={`uppercase px-3 py-1.5 ${config.bg} ${config.text} rounded-full text-xs font-medium border ${config.border}`}
-                        >
-                          {config.label}
-                        </span>
-                      );
-                    })()}
+                    <span class={`uppercase px-3 py-1.5 ${config.bg} ${config.text} rounded-full text-xs font-medium border ${config.border}`}>
+                      {config.label}
+                    </span>
                   </div>
                 </div>
-
                 <div class="p-6">
-                  {/* Builder Info */}
-                  <div class="flex items-center gap-3 mb-4">
+                  <a href={`/${project.profiles.username}`} class="flex items-center gap-3 mb-4 group/builder">
                     {project.profiles.avatar_url ? (
-                      <img
-                        src={project.profiles.avatar_url}
-                        alt={project.profiles.username}
-                        class="w-10 h-10 rounded-full ring-2 ring-slate-700"
-                      />
+                      <img src={project.profiles.avatar_url} alt={project.profiles.username} class="w-10 h-10 rounded-full ring-2 ring-slate-700" />
                     ) : (
                       <div class="w-10 h-10 rounded-full bg-primary-900/50 text-primary-300 flex items-center justify-center ring-2 ring-primary-700/50">
-                        <span class="text-sm font-medium">
-                          {project.profiles.username?.[0]?.toUpperCase()}
-                        </span>
+                        <span class="text-sm font-medium">{project.profiles.username?.[0]?.toUpperCase()}</span>
                       </div>
                     )}
                     <div>
-                      <h4 class="text-sm font-medium text-slate-200">
-                        {project.profiles.full_name ||
-                          project.profiles.username}
+                      <h4 class="text-sm font-medium text-slate-200 group-hover/builder:text-primary-400 transition-colors">
+                        {project.profiles.full_name || project.profiles.username}
                       </h4>
-                      <a
-                        href={`/${project.profiles.username}`}
-                        class="text-xs text-slate-400 hover:text-primary-400"
-                      >
-                        @{project.profiles.username}
-                      </a>
+                      <div class="text-xs text-slate-400">@{project.profiles.username}</div>
                     </div>
-                  </div>
-
-                  {/* Project Info */}
-                  <a
-                    href={`/projects/${project.slug}`}
-                    class="text-xl font-semibold text-slate-100 mb-2 group-hover:text-primary-400 transition-colors block"
-                  >
+                  </a>
+                  <a href={`/projects/${project.slug}`} class="text-xl font-semibold text-slate-100 mb-2 group-hover:text-primary-400 transition-colors block">
                     {project.title}
                   </a>
                   {project.description && (
-                    <p class="text-slate-300 text-sm mb-4 line-clamp-2">
-                      {project.description}
-                    </p>
+                    <p class="text-slate-300 text-sm mb-4 line-clamp-2">{project.description}</p>
                   )}
-
-                  {/* Tech Stack */}
                   {project.tech_stack && (
                     <div class="flex flex-wrap gap-2">
                       {project.tech_stack.map((tech: string) => (
-                        <span class="px-2.5 py-1 bg-slate-700/50 text-slate-300 rounded-lg text-xs border border-slate-600">
-                          {tech}
-                        </span>
+                        <span class="px-2.5 py-1 bg-slate-700/50 text-slate-300 rounded-lg text-xs border border-slate-600">{tech}</span>
                       ))}
                     </div>
                   )}
                 </div>
               </div>
-            ))
-          }
+            );
+          })}
         </div>
 
-        {/* Show this when no projects */}
-        {
-          (!latestProjects || latestProjects.length === 0) && (
-            <div class="text-center py-12 bg-slate-800/50 rounded-2xl border border-slate-700">
-              <div class="text-4xl mb-4">🌱</div>
-              <h3 class="text-lg font-medium text-slate-200 mb-2">
-                No Active Bets Yet
-              </h3>
-              <p class="text-slate-300">
-                Be the first to place a bet this month!
-              </p>
-            </div>
-          )
-        }
+        {(!latestBets || latestBets.length === 0) && (
+          <div class="text-center py-12 bg-slate-800/50 rounded-2xl border border-slate-700">
+            <div class="text-4xl mb-4">🌱</div>
+            <h3 class="text-lg font-medium text-slate-200 mb-2">No Active Bets Yet</h3>
+            <p class="text-slate-300">Be the first to place a bet!</p>
+          </div>
+        )}
 
-        {/* View All Link */}
         <div class="text-center mt-12">
           <a
-            href="/projects"
+            href="/bets"
             class="inline-flex items-center gap-2 px-8 py-3 text-base font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-primary-900/50"
           >
             View All Bets
             <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fill-rule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"></path>
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
             </svg>
           </a>
         </div>

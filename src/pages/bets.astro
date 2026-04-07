@@ -1,0 +1,634 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import { supabase } from "../lib/supabase";
+
+// Get URL params for filtering
+const { searchParams } = Astro.url;
+const status = searchParams.get("status");
+const month = searchParams.get("month");
+
+// Get current month
+const currentMonth = new Date().toLocaleString("default", { month: "long" });
+
+// Build query
+let query = supabase
+  .from("products")
+  .select(
+    `
+    *,
+    profiles:profile_id (
+      username,
+      full_name,
+      avatar_url
+    )
+  `
+  )
+  .order("created_at", { ascending: false });
+
+// Apply filters
+if (status) {
+  query = query.eq("status", status);
+}
+if (month) {
+  query = query.eq("month", month);
+}
+
+// Fetch projects
+const { data: projects } = await query;
+
+// Get unique tech stacks for filtering
+const techStacks = [
+  ...new Set(projects?.flatMap((p) => p.tech_stack || [])),
+].sort();
+
+// Get months for filtering
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+// Get stats
+const stats = {
+  total: projects?.length || 0,
+  completed: projects?.filter((p) => p.status === "completed").length || 0,
+  inProgress: projects?.filter((p) => p.status === "in_progress").length || 0,
+  notStarted: projects?.filter((p) => p.status === "not_started").length || 0,
+};
+
+// Prepare SEO metadata
+const title = status
+  ? `${status
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")} Bets - 12 in 12`
+  : month
+    ? `${month} Bets - 12 in 12`
+    : "All Builder Bets - 12 in 12";
+
+const description = status
+  ? `Discover ${stats[status.replace("_", "") + "ed"] || stats[status.replace("_", "")]} ${status
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")} bets placed by our community of builders.`
+  : month
+    ? `Explore bets being made by our community in ${month}. Join us in betting on yourself as a builder!`
+    : `Discover ${stats.total} bets placed by our community of builders. From shipped bets to work in progress, see what everyone is building.`;
+
+// Prepare JSON-LD structured data
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: title,
+  description: description,
+  url: Astro.url,
+  numberOfItems: stats.total,
+  itemListElement: projects?.map((project, index) => ({
+    "@type": "SoftwareApplication",
+    position: index + 1,
+    name: project.title,
+    description: project.description,
+    applicationCategory: project.tech_stack?.join(", "),
+    author: {
+      "@type": "Person",
+      name: project.profiles.full_name || project.profiles.username,
+      url: `${Astro.url.origin}/${project.profiles.username}`,
+    },
+    ...(project.demo_url && { url: project.demo_url }),
+    ...(project.github_url && { codeRepository: project.github_url }),
+  })),
+};
+
+const getStatusConfig = (status: string = "not_started") => {
+  const configs = {
+    completed: {
+      dotColor: "bg-emerald-400",
+      textColor: "text-emerald-200",
+      bgColor: "bg-emerald-900/50",
+      label: "Completed",
+    },
+    in_progress: {
+      dotColor: "bg-amber-400",
+      textColor: "text-amber-200",
+      bgColor: "bg-amber-900/50",
+      label: "In Progress",
+    },
+    not_started: {
+      dotColor: "bg-slate-400",
+      textColor: "text-slate-200",
+      bgColor: "bg-slate-800/50",
+      label: "Not Started",
+    },
+    canceled: {
+      dotColor: "bg-red-400",
+      textColor: "text-red-200",
+      bgColor: "bg-red-900/50",
+      label: "Canceled",
+    },
+    parked: {
+      dotColor: "bg-slate-400",
+      textColor: "text-slate-200",
+      bgColor: "bg-slate-800/50",
+      label: "Parked",
+    },
+  };
+  return configs[status as keyof typeof configs] || configs.not_started;
+};
+---
+
+<Layout title={title}>
+  <head slot="head">
+    <!-- Primary Meta Tags -->
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={Astro.url} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta
+      property="og:image"
+      content={`${Astro.url.origin}/images/og-projects.png`}
+    />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={Astro.url} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta
+      property="twitter:image"
+      content={`${Astro.url.origin}/images/og-projects.png`}
+    />
+
+    <!-- Canonical URL -->
+    <link
+      rel="canonical"
+      href={new URL("/bets", Astro.url.origin).toString()}
+    />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+
+  <Navbar />
+
+  <main class="bg-slate-900 pt-24 pb-16">
+    <div class="container mx-auto px-4">
+      {/* Header */}
+      <div class="max-w-3xl mx-auto text-center mb-16">
+        <h1 class="text-4xl font-bold text-white mb-4">Builder Bets</h1>
+        <p class="text-lg text-slate-300">
+          Discover what our community is betting on
+        </p>
+      </div>
+
+      {/* Stats */}
+      <div
+        class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12"
+      >
+        <div
+          class="bg-slate-800/50 rounded-xl p-4 text-center shadow-lg border border-slate-700/50"
+        >
+          <div class="text-3xl font-bold text-white mb-1">{stats.total}</div>
+          <div class="text-sm font-medium text-slate-300">Total Bets</div>
+        </div>
+        <div
+          class="bg-emerald-900/50 rounded-xl p-4 text-center shadow-lg border border-emerald-700/50"
+        >
+          <div class="text-3xl font-bold text-emerald-400 mb-1">
+            {stats.completed}
+          </div>
+          <div class="text-sm font-medium text-emerald-200">Completed</div>
+        </div>
+        <div
+          class="bg-amber-900/50 rounded-xl p-4 text-center shadow-lg border border-amber-700/50"
+        >
+          <div class="text-3xl font-bold text-amber-400 mb-1">
+            {stats.inProgress}
+          </div>
+          <div class="text-sm font-medium text-amber-200">In Progress</div>
+        </div>
+        <div
+          class="bg-slate-800/50 rounded-xl p-4 text-center shadow-lg border border-slate-700/50"
+        >
+          <div class="text-3xl font-bold text-slate-400 mb-1">
+            {stats.notStarted}
+          </div>
+          <div class="text-sm font-medium text-slate-300">Launching Soon</div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div
+        class="bg-slate-800/50 rounded-xl shadow-lg border border-slate-700/50 p-8 mb-12 max-w-7xl mx-auto"
+      >
+        <div
+          class="flex items-center justify-between mb-6 pb-6 border-b border-slate-700/50"
+        >
+          <div>
+            <h2 class="text-xl font-semibold text-slate-200">
+              Filter Bets
+            </h2>
+            <p class="text-sm text-slate-400 mt-1">
+              Find the perfect bet to explore
+            </p>
+          </div>
+          <button
+            id="clear-filters"
+            class="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
+          >
+            Clear Filters
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Search and Tech Stack */}
+          <div class="space-y-6">
+            {/* Search Input */}
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-2"
+                >Search Bets</label
+              >
+              <div class="relative">
+                <input
+                  type="text"
+                  id="search-input"
+                  class="w-full rounded-lg bg-slate-700/50 border border-slate-600 text-slate-200 text-sm px-4 py-3 pl-10 appearance-none hover:bg-slate-700 focus:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Search by title, description, or tech stack..."
+                />
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="w-5 h-5 text-slate-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                      clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Tech Stack Filter */}
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-2"
+                >Tech Stack</label
+              >
+              <select
+                id="tech-filter"
+                class="w-full rounded-lg bg-slate-700/50 border border-slate-600 text-slate-200 text-sm px-4 py-3 appearance-none hover:bg-slate-700 focus:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+              >
+                <option value="">All Technologies</option>
+                {techStacks.map((tech) => <option value={tech}>{tech}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Status and Month */}
+          <div class="space-y-6">
+            {/* Status Filter */}
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-2"
+                >Status</label
+              >
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <a
+                  href="/bets"
+                  class={`px-4 py-2.5 rounded-lg text-center text-sm font-medium transition-colors ${!status ? "bg-primary-900/50 text-primary-200 border border-primary-700/50 shadow-sm" : "bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700"}`}
+                >
+                  All
+                </a>
+                <a
+                  href="/projects?status=completed"
+                  class={`px-4 py-2.5 rounded-lg text-center text-sm font-medium transition-colors ${status === "completed" ? "bg-emerald-900/50 text-emerald-200 border border-emerald-700/50 shadow-sm" : "bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700"}`}
+                >
+                  Completed
+                </a>
+                <a
+                  href="/projects?status=in_progress"
+                  class={`px-4 py-2.5 rounded-lg text-center text-sm font-medium transition-colors ${status === "in_progress" ? "bg-amber-900/50 text-amber-200 border border-amber-700/50 shadow-sm" : "bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700"}`}
+                >
+                  In Progress
+                </a>
+                <a
+                  href="/projects?status=not_started"
+                  class={`px-4 py-2.5 rounded-lg text-center text-sm font-medium transition-colors ${status === "not_started" ? "bg-slate-800/80 text-slate-200 border border-slate-600 shadow-sm" : "bg-slate-700/50 text-slate-300 border border-slate-600 hover:bg-slate-700"}`}
+                >
+                  Not Started
+                </a>
+              </div>
+            </div>
+
+            {/* Month Filter */}
+            <div>
+              <label class="block text-sm font-medium text-slate-300 mb-2"
+                >Month</label
+              >
+              <select
+                class="w-full rounded-lg bg-slate-700/50 border border-slate-600 text-slate-200 text-sm px-4 py-3 appearance-none hover:bg-slate-700 focus:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                onchange="window.location.href = this.value"
+              >
+                <option value="/bets" selected={!month}>All Months</option>
+                {
+                  months.map((m) => (
+                    <option
+                      value={`/projects?month=${m}`}
+                      selected={month === m}
+                    >
+                      {m} {m === currentMonth ? "(Current)" : ""}
+                    </option>
+                  ))
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Projects Grid */}
+      <div
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
+      >
+        {
+          projects?.map((project) => (
+            <a
+              href={`/projects/${project.slug}`}
+              class="block bg-slate-800/50 rounded-xl shadow-lg hover:shadow-xl transition-all border border-slate-700/50 overflow-hidden group hover:border-primary-500/30"
+              data-project-card={JSON.stringify({
+                title: project.title,
+                description: project.description,
+                tech_stack: project.tech_stack,
+              })}
+            >
+              {/* Project Thumbnail */}
+              <div class="relative h-48 bg-slate-800">
+                {project.thumbnail_url ? (
+                  <img
+                    src={project.thumbnail_url}
+                    alt={project.title}
+                    class="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div class="flex items-center justify-center h-full bg-gradient-to-br from-slate-800 to-slate-900">
+                    <span class="text-slate-500">
+                      {project.status === "not_started"
+                        ? "🚀 Coming Soon"
+                        : "🏗️ Building"}
+                    </span>
+                  </div>
+                )}
+                <div class="absolute top-4 right-4">
+                  <span
+                    class={`px-3 py-1.5 rounded-full text-xs font-medium ${getStatusConfig(project.status).bgColor} ${getStatusConfig(project.status).textColor} shadow-sm backdrop-blur-sm bg-opacity-90`}
+                  >
+                    {getStatusConfig(project.status).label}
+                  </span>
+                </div>
+              </div>
+
+              <div class="p-6">
+                {/* Builder Info */}
+                <a href={`/${project.profiles.username}`} class="flex items-center gap-3 mb-4 group/builder">
+                  {project.profiles.avatar_url ? (
+                    <img
+                      src={project.profiles.avatar_url}
+                      alt={project.profiles.username}
+                      class="w-10 h-10 rounded-full ring-2 ring-slate-700"
+                    />
+                  ) : (
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-900 to-primary-800 flex items-center justify-center ring-2 ring-slate-700">
+                      <span class="text-primary-200 text-sm">
+                        {project.profiles.username?.[0]?.toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <h4 class="text-sm font-medium text-slate-200 group-hover/builder:text-primary-400 transition-colors">
+                      {project.profiles.full_name || project.profiles.username}
+                    </h4>
+                    <div class="text-xs text-slate-400">
+                      @{project.profiles.username}
+                    </div>
+                  </div>
+                </a>
+
+                {/* Project Info */}
+                <h3 class="text-xl font-semibold text-slate-200 mb-2 group-hover:text-primary-400 transition-colors">
+                  {project.title}
+                </h3>
+                {project.description && (
+                  <p class="text-slate-300 text-sm mb-4 line-clamp-2">
+                    {project.description}
+                  </p>
+                )}
+
+                {/* Tech Stack */}
+                {project.tech_stack && (
+                  <div class="flex flex-wrap gap-2 mb-4">
+                    {project.tech_stack.map((tech: string) => (
+                      <span class="px-2 py-1 bg-slate-700/50 text-slate-300 rounded text-xs border border-slate-600/50">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Links - Only show for completed projects */}
+                {project.status === "completed" && (
+                  <div class="flex gap-3 mt-4 pt-4 border-t border-slate-700/50">
+                    {project.github_url && (
+                      <div class="inline-flex items-center text-sm text-slate-400 hover:text-slate-200">
+                        <svg
+                          class="w-4 h-4 mr-1"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                        </svg>
+                        Code
+                      </div>
+                    )}
+                    {project.demo_url && (
+                      <div class="inline-flex items-center text-sm text-slate-400 hover:text-slate-200">
+                        <svg
+                          class="w-4 h-4 mr-1"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
+                        Demo
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </a>
+          ))
+        }
+      </div>
+
+      {/* Empty State */}
+      <div id="empty-state" class="text-center py-12" style="display: none;">
+        <div class="text-slate-400 mb-4">🔍</div>
+        <h3 class="text-lg font-medium text-slate-200 mb-2">
+          No Bets Found
+        </h3>
+        <p class="text-slate-400">
+          Try adjusting your filters to find what you're looking for
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Layout>
+
+<script>
+  let debounceTimer: ReturnType<typeof setTimeout>;
+
+  // Filter projects based on search input and tech filter
+  const filterProjects = () => {
+    const searchInput = document.getElementById(
+      "search-input"
+    ) as HTMLInputElement;
+    const techFilter = document.getElementById(
+      "tech-filter"
+    ) as HTMLSelectElement;
+    const projectCards = document.querySelectorAll("[data-project-card]");
+
+    const searchTerm = searchInput?.value.toLowerCase() || "";
+    const selectedTech = techFilter?.value.toLowerCase() || "";
+
+    let visibleCount = 0;
+
+    projectCards.forEach((card) => {
+      const projectData = JSON.parse(
+        card.getAttribute("data-project-card") || "{}"
+      );
+      const title = projectData.title?.toLowerCase() || "";
+      const description = projectData.description?.toLowerCase() || "";
+      const techStack =
+        projectData.tech_stack?.map((t: string) => t.toLowerCase()) || [];
+
+      const matchesSearch =
+        searchTerm === "" ||
+        title.includes(searchTerm) ||
+        description.includes(searchTerm) ||
+        techStack.some((tech: string) => tech.includes(searchTerm));
+
+      const matchesTech =
+        selectedTech === "" || techStack.includes(selectedTech);
+
+      if (matchesSearch && matchesTech) {
+        (card as HTMLElement).style.display = "";
+        visibleCount++;
+      } else {
+        (card as HTMLElement).style.display = "none";
+      }
+    });
+
+    // Update empty state visibility
+    const emptyState = document.getElementById("empty-state");
+    if (emptyState) {
+      emptyState.style.display = visibleCount === 0 ? "" : "none";
+    }
+
+    // Update clear filters button visibility
+    updateClearFiltersVisibility();
+  };
+
+  // Debounce the filter function for better performance
+  const debounceFilter = () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(filterProjects, 300);
+  };
+
+  // Handle clear filters
+  const clearFiltersBtn = document.getElementById("clear-filters");
+  const searchInput = document.getElementById(
+    "search-input"
+  ) as HTMLInputElement;
+  const techFilter = document.getElementById(
+    "tech-filter"
+  ) as HTMLSelectElement;
+
+  if (clearFiltersBtn) {
+    clearFiltersBtn.addEventListener("click", () => {
+      // Clear search input
+      if (searchInput) {
+        searchInput.value = "";
+        searchInput.dispatchEvent(new Event("input"));
+      }
+
+      // Reset tech filter
+      if (techFilter) {
+        techFilter.value = "";
+        techFilter.dispatchEvent(new Event("change"));
+      }
+
+      // Check if we're on a filtered URL
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("status") || url.searchParams.has("month")) {
+        window.location.href = "/bets";
+      }
+    });
+  }
+
+  // Show/hide clear filters button based on filter state
+  const updateClearFiltersVisibility = () => {
+    if (!clearFiltersBtn) return;
+
+    const hasSearch = searchInput?.value.trim() !== "";
+    const hasTechFilter = techFilter?.value !== "";
+    const hasUrlParams =
+      new URL(window.location.href).searchParams.toString() !== "";
+
+    if (hasSearch || hasTechFilter || hasUrlParams) {
+      clearFiltersBtn.style.opacity = "1";
+      clearFiltersBtn.style.pointerEvents = "auto";
+    } else {
+      clearFiltersBtn.style.opacity = "0.5";
+      clearFiltersBtn.style.pointerEvents = "none";
+    }
+  };
+
+  // Initialize
+  document.addEventListener("DOMContentLoaded", () => {
+    // Add event listeners for search and filter
+    searchInput?.addEventListener("input", debounceFilter);
+    techFilter?.addEventListener("change", filterProjects);
+
+    // Initialize clear filters button state
+    updateClearFiltersVisibility();
+  });
+</script>

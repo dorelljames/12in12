@@ -1,0 +1,30 @@
+---
+// Relaunch banner — update or remove when the relaunch date passes
+const showBanner = true;
+const message = "We're relaunching with a new vision in May 2026!";
+const ctaText = "Learn More";
+const ctaLink = "/about";
+---
+
+{showBanner && (
+  <div class="relative z-50 bg-gradient-to-r from-emerald-600 to-primary-600">
+    <div class="container mx-auto px-4 py-2.5 flex items-center justify-center gap-3 text-sm text-white">
+      <span class="inline-flex items-center gap-2">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+        </span>
+        {message}
+      </span>
+      <a
+        href={ctaLink}
+        class="inline-flex items-center gap-1 font-semibold underline underline-offset-2 hover:text-emerald-100 transition-colors"
+      >
+        {ctaText}
+        <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+        </svg>
+      </a>
+    </div>
+  </div>
+)}
