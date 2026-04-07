@@ -130,8 +130,20 @@ const getStatusConfig = (status: string = "not_started") => {
       bgColor: "bg-slate-800/50",
       label: "Not Started",
     },
+    canceled: {
+      dotColor: "bg-red-400",
+      textColor: "text-red-200",
+      bgColor: "bg-red-900/50",
+      label: "Canceled",
+    },
+    parked: {
+      dotColor: "bg-slate-400",
+      textColor: "text-slate-200",
+      bgColor: "bg-slate-800/50",
+      label: "Parked",
+    },
   };
-  return configs[status as keyof typeof configs];
+  return configs[status as keyof typeof configs] || configs.not_started;
 };
 ---
 
