@@ -378,7 +378,7 @@ const getStatusConfig = (status: string = "not_started") => {
               })}
             >
               {/* Project Thumbnail */}
-              <div class="relative h-48 bg-slate-800">
+              <div class="relative aspect-video bg-slate-800">
                 {project.thumbnail_url ? (
                   <img
                     src={project.thumbnail_url}
@@ -388,9 +388,11 @@ const getStatusConfig = (status: string = "not_started") => {
                 ) : (
                   <div class="flex items-center justify-center h-full bg-gradient-to-br from-slate-800 to-slate-900">
                     <span class="text-slate-500">
-                      {project.status === "not_started"
-                        ? "🚀 Coming Soon"
-                        : "🏗️ Building"}
+                      {project.status === "completed"
+                        ? "✅ Shipped"
+                        : project.status === "in_progress"
+                          ? "🏗️ Building"
+                          : "🚀 Planned"}
                     </span>
                   </div>
                 )}
