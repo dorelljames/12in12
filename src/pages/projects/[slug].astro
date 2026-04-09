@@ -8,7 +8,7 @@ import { supabase } from "../../lib/supabase";
 // Get project slug from URL params
 const { slug } = Astro.params;
 
-// Fetch project details
+// Fetch project details with updates
 const { data: project } = await supabase
   .from("products")
   .select(
@@ -19,6 +19,12 @@ const { data: project } = await supabase
         full_name,
         avatar_url,
         bio
+      ),
+      product_updates (
+        id,
+        type,
+        content,
+        created_at
       )
     `
   )
@@ -30,30 +36,73 @@ if (!project) {
   return Astro.redirect("/404");
 }
 
+// Sort updates newest first
+const updates = (project.product_updates || []).sort(
+  (a: any, b: any) =>
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+);
+
 // Get status config
-const getStatusConfig = (status: string = "not_started") => {
-  const configs = {
-    completed: {
-      dotColor: "bg-emerald-500",
-      textColor: "text-emerald-600",
-      bgColor: "bg-emerald-50",
-      label: "Completed",
-    },
-    in_progress: {
-      dotColor: "bg-amber-500",
-      textColor: "text-amber-600",
-      bgColor: "bg-amber-50",
-      label: "In Progress",
-    },
-    not_started: {
-      dotColor: "bg-gray-300",
-      textColor: "text-gray-400",
-      bgColor: "bg-gray-50",
-      label: "Not Started",
-    },
-  };
-  return configs[status as keyof typeof configs];
+const statusConfig: Record<
+  string,
+  { dotColor: string; textColor: string; bgColor: string; borderColor: string; label: string }
+> = {
+  completed: {
+    dotColor: "bg-emerald-400",
+    textColor: "text-emerald-400",
+    bgColor: "bg-emerald-500/10",
+    borderColor: "border-emerald-500/30",
+    label: "Shipped",
+  },
+  in_progress: {
+    dotColor: "bg-amber-400",
+    textColor: "text-amber-400",
+    bgColor: "bg-amber-500/10",
+    borderColor: "border-amber-500/30",
+    label: "In Progress",
+  },
+  not_started: {
+    dotColor: "bg-slate-400",
+    textColor: "text-slate-400",
+    bgColor: "bg-slate-500/10",
+    borderColor: "border-slate-500/30",
+    label: "Not Started",
+  },
 };
+
+const status = statusConfig[project.status] || statusConfig.not_started;
+
+// Motivation config
+const motivationConfig: Record<
+  string,
+  { label: string; color: string; bgColor: string; borderColor: string; icon: string }
+> = {
+  profit: {
+    label: "For Profit",
+    color: "text-green-400",
+    bgColor: "bg-green-500/10",
+    borderColor: "border-green-500/30",
+    icon: "💰",
+  },
+  impact: {
+    label: "For Impact",
+    color: "text-blue-400",
+    bgColor: "bg-blue-500/10",
+    borderColor: "border-blue-500/30",
+    icon: "🌍",
+  },
+  craft: {
+    label: "For Craft",
+    color: "text-amber-400",
+    bgColor: "bg-amber-500/10",
+    borderColor: "border-amber-500/30",
+    icon: "🔨",
+  },
+};
+
+const motivation = project.motivation
+  ? motivationConfig[project.motivation]
+  : null;
 
 // Format date
 const formatDate = (date: string) => {
@@ -62,6 +111,60 @@ const formatDate = (date: string) => {
     day: "numeric",
     year: "numeric",
   });
+};
+
+// Format relative date for "time remaining"
+const getTimeRemaining = (deadline: string) => {
+  const now = new Date();
+  const end = new Date(deadline);
+  const diffMs = end.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return { text: `${Math.abs(diffDays)} days overdue`, overdue: true };
+  if (diffDays === 0) return { text: "Due today", overdue: false };
+  if (diffDays === 1) return { text: "1 day remaining", overdue: false };
+  if (diffDays < 30) return { text: `${diffDays} days remaining`, overdue: false };
+  const weeks = Math.floor(diffDays / 7);
+  if (diffDays < 60) return { text: `${weeks} weeks remaining`, overdue: false };
+  const months = Math.floor(diffDays / 30);
+  return { text: `${months} months remaining`, overdue: false };
+};
+
+const timeRemaining = project.deadline ? getTimeRemaining(project.deadline) : null;
+
+// Update type config
+const updateTypeConfig: Record<
+  string,
+  { emoji: string; color: string; bgColor: string; borderColor: string; label: string }
+> = {
+  milestone: {
+    emoji: "🏆",
+    color: "text-purple-300",
+    bgColor: "bg-purple-500/10",
+    borderColor: "border-purple-500/30",
+    label: "Milestone",
+  },
+  progress: {
+    emoji: "📈",
+    color: "text-blue-300",
+    bgColor: "bg-blue-500/10",
+    borderColor: "border-blue-500/30",
+    label: "Progress",
+  },
+  launch: {
+    emoji: "🚀",
+    color: "text-emerald-300",
+    bgColor: "bg-emerald-500/10",
+    borderColor: "border-emerald-500/30",
+    label: "Launch",
+  },
+  learning: {
+    emoji: "💡",
+    color: "text-amber-300",
+    bgColor: "bg-amber-500/10",
+    borderColor: "border-amber-500/30",
+    label: "Learning",
+  },
 };
 
 // Prepare SEO metadata
@@ -92,45 +195,38 @@ const jsonLd = {
   }),
   ...(project.demo_url && { url: project.demo_url }),
   ...(project.github_url && { codeRepository: project.github_url }),
-  status: getStatusConfig(project.status).label,
+  status: status.label,
 };
 ---
 
 <Layout title={title}>
   <head slot="head">
-    <!-- Primary Meta Tags -->
     <meta name="title" content={title} />
     <meta name="description" content={description} />
-
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={Astro.url} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImage} />
-
-    <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content={Astro.url} />
     <meta property="twitter:title" content={title} />
     <meta property="twitter:description" content={description} />
     <meta property="twitter:image" content={ogImage} />
-
-    <!-- Structured Data -->
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
 
   <Navbar />
 
   <main class="bg-slate-900 pt-24 pb-16">
-    <div class="container mx-auto px-4">
+    <article class="mx-auto max-w-3xl px-4 sm:px-6">
       {/* Back Link */}
-      <div class="max-w-4xl mx-auto mb-8">
+      <nav class="mt-4 mb-10">
         <a
           href="/bets"
-          class="inline-flex items-center text-sm text-slate-400 hover:text-primary-400 transition-colors"
+          class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 transition-colors"
         >
-          <svg class="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
             <path
               fill-rule="evenodd"
               d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
@@ -138,314 +234,254 @@ const jsonLd = {
           </svg>
           Back to Bets
         </a>
-      </div>
+      </nav>
 
-      {/* Project Header */}
-      <div
-        class="max-w-4xl mx-auto bg-slate-800/50 rounded-xl shadow-lg border border-slate-700/50 overflow-hidden mb-8 transition-all hover:shadow-xl hover:shadow-slate-900/50"
-      >
-        {/* Project Thumbnail */}
-        <div class="relative h-80 bg-slate-800">
+      {/* ──────────────────────────────────────────── */}
+      {/* SECTION 1: THE THESIS                        */}
+      {/* ──────────────────────────────────────────── */}
+      <header class="mb-10">
+        {/* Motivation badge */}
+        <div class="flex flex-wrap items-center gap-3 mb-5">
           {
-            project.thumbnail_url ? (
+            motivation && (
+              <span
+                class={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${motivation.bgColor} ${motivation.color} border ${motivation.borderColor}`}
+              >
+                <span>{motivation.icon}</span>
+                {motivation.label}
+              </span>
+            )
+          }
+          <span
+            class={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${status.bgColor} ${status.textColor} border ${status.borderColor}`}
+          >
+            <span class={`w-1.5 h-1.5 rounded-full ${status.dotColor}`}></span>
+            {status.label}
+          </span>
+        </div>
+
+        {/* Title */}
+        <h1 class="text-3xl sm:text-4xl font-bold text-white tracking-tight leading-tight mb-6">
+          {project.title}
+        </h1>
+
+        {/* The thesis — the bet statement */}
+        {
+          project.description && (
+            <blockquote class="border-l-2 border-primary-500/50 pl-5 text-lg text-slate-300 leading-relaxed">
+              {project.description}
+            </blockquote>
+          )
+        }
+
+        {/* Thumbnail */}
+        {
+          project.thumbnail_url && (
+            <div class="mt-8 rounded-lg overflow-hidden border border-slate-800">
               <img
                 src={project.thumbnail_url}
                 alt={project.title}
-                class="w-full h-full object-cover"
+                class="w-full h-auto max-h-80 object-cover"
               />
-            ) : (
-              <div class="flex items-center justify-center h-full bg-gradient-to-br from-slate-800 to-slate-900">
-                <span class="text-slate-500 text-xl">
-                  {project.status === "not_started"
-                    ? "🚀 Coming Soon"
-                    : "🏗️ Building"}
-                </span>
-              </div>
-            )
-          }
-          <div class="absolute top-4 right-4">
-            <span
-              class={`px-4 py-1.5 rounded-full text-sm font-medium ${
-                getStatusConfig(project.status).bgColor
-              } ${getStatusConfig(project.status).textColor} shadow-sm backdrop-blur-sm bg-opacity-90`}
-            >
-              {getStatusConfig(project.status).label}
-            </span>
-          </div>
-        </div>
+            </div>
+          )
+        }
 
-        <div class="p-8">
-          {/* Builder Info */}
-          <div
-            class="flex flex-col sm:flex-row sm:items-center gap-6 mb-8 p-6 bg-slate-800/50 rounded-xl border border-slate-700"
-          >
-            <div class="flex items-center gap-4">
-              {
-                project.profiles.avatar_url ? (
-                  <img
-                    src={project.profiles.avatar_url}
-                    alt={project.profiles.username}
-                    class="w-16 h-16 rounded-full ring-2 ring-slate-700 shadow-md"
-                  />
-                ) : (
-                  <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary-900 to-primary-800 flex items-center justify-center ring-2 ring-slate-700 shadow-md">
-                    <span class="text-primary-200 text-xl font-medium">
-                      {project.profiles.username?.[0]?.toUpperCase()}
-                    </span>
-                  </div>
-                )
-              }
-              <div>
-                <h4 class="text-lg font-semibold text-slate-200">
-                  {project.profiles.full_name || project.profiles.username}
-                </h4>
-                <p class="text-sm text-slate-400 mb-2">
-                  @{project.profiles.username}
-                </p>
-                {
-                  project.profiles.bio && (
-                    <p class="text-sm text-slate-400 max-w-md">
-                      {project.profiles.bio}
-                    </p>
-                  )
-                }
-              </div>
-            </div>
-            <div class="sm:ml-auto">
-              <a
-                href={`/${project.profiles.username}`}
-                class="inline-flex items-center px-4 py-2 bg-slate-700 text-slate-200 rounded-lg hover:bg-slate-600 transition-colors border border-slate-600 font-medium shadow-sm hover:shadow"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-5 h-5 mr-2"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                View Profile
-              </a>
-            </div>
-          </div>
-
-          {/* Project Info */}
-          <h1 class="text-4xl font-bold text-slate-100 mb-4 leading-tight">
-            {project.title}
-          </h1>
-          {
-            project.description && // prettier-ignore
-            <p class="text-lg text-slate-300 mb-8 whitespace-pre-wrap leading-relaxed">{project.description}</p>
-          }
-
-          {/* Project Meta */}
-          <div
-            class="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-y border-slate-700"
-          >
-            <div>
-              <div class="text-sm font-medium text-slate-400 mb-1">Status</div>
-              <div class="flex items-center gap-1.5">
-                <div
-                  class={`w-2 h-2 rounded-full ${getStatusConfig(project.status).dotColor}`}
-                >
-                </div>
-                <span
-                  class={`text-sm ${getStatusConfig(project.status).textColor}`}
-                >
-                  {getStatusConfig(project.status).label}
-                </span>
-              </div>
-            </div>
-            <div>
-              <div class="text-sm font-medium text-slate-400 mb-1">Month</div>
-              <div class="text-sm text-slate-300">{project.month}</div>
-            </div>
-            <div>
-              <div class="text-sm font-medium text-slate-400 mb-1">Started</div>
-              <div class="text-sm text-slate-300">
-                {formatDate(project.created_at)}
-              </div>
-            </div>
+        {/* Builder byline */}
+        <div class="mt-6 flex items-center gap-3">
+          <a href={`/${project.profiles.username}`} class="flex-shrink-0">
             {
-              project.completed_at && (
-                <div>
-                  <div class="text-sm font-medium text-slate-400 mb-1">
-                    Completed
-                  </div>
-                  <div class="text-sm text-slate-300">
-                    {formatDate(project.completed_at)}
-                  </div>
+              project.profiles.avatar_url ? (
+                <img
+                  src={project.profiles.avatar_url}
+                  alt={project.profiles.username}
+                  class="w-9 h-9 rounded-full ring-1 ring-slate-700"
+                />
+              ) : (
+                <div class="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center ring-1 ring-slate-600">
+                  <span class="text-sm font-medium text-slate-300">
+                    {project.profiles.username?.[0]?.toUpperCase()}
+                  </span>
                 </div>
               )
             }
+          </a>
+          <div class="text-sm">
+            <a
+              href={`/${project.profiles.username}`}
+              class="font-medium text-slate-200 hover:text-white transition-colors"
+            >
+              {project.profiles.full_name || project.profiles.username}
+            </a>
+            <span class="text-slate-500 mx-1.5">&middot;</span>
+            <time class="text-slate-500">
+              {formatDate(project.started_at || project.created_at)}
+            </time>
           </div>
+        </div>
+      </header>
 
-          {/* Tech Stack */}
+      {/* ──────────────────────────────────────────── */}
+      {/* SECTION 2: THE STAKES — ACCOUNTABILITY BAR   */}
+      {/* ──────────────────────────────────────────── */}
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-3 py-4 mb-10 border-y border-slate-800 text-sm">
+        {/* Started */}
+        <div class="flex items-center gap-2 text-slate-400">
+          <svg class="w-4 h-4 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+          </svg>
+          <span>Started {formatDate(project.started_at || project.created_at)}</span>
+        </div>
+
+        {/* Deadline + time remaining */}
+        {
+          project.deadline && timeRemaining && (
+            <div class={`flex items-center gap-2 ${timeRemaining.overdue ? "text-red-400" : "text-slate-400"}`}>
+              <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+              </svg>
+              <span>{timeRemaining.text}</span>
+              <span class="text-slate-600">&middot;</span>
+              <span class="text-slate-500">{formatDate(project.deadline)}</span>
+            </div>
+          )
+        }
+
+        {/* Tech stack inline */}
+        {
+          project.tech_stack && project.tech_stack.length > 0 && (
+            <div class="flex items-center gap-2">
+              {project.tech_stack.map((tech: string) => (
+                <span class="px-2 py-0.5 text-xs font-medium text-slate-400 bg-slate-800 rounded border border-slate-700">
+                  {tech}
+                </span>
+              ))}
+            </div>
+          )
+        }
+
+        {/* Links */}
+        <div class="flex items-center gap-3 ml-auto">
           {
-            project.tech_stack && (
-              <div class="mt-8">
-                <h3 class="text-base font-semibold text-slate-200 mb-4">
-                  Tech Stack
-                </h3>
-                <div class="flex flex-wrap gap-2">
-                  {project.tech_stack.map((tech: string) => (
-                    <span class="px-3 py-1.5 bg-slate-700/50 text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors cursor-default border border-slate-600">
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            project.github_url && (
+              <a
+                href={project.github_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-slate-500 hover:text-slate-300 transition-colors"
+                title="Source code"
+              >
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                </svg>
+              </a>
             )
           }
-
-          {/* Project Links */}
           {
-            (project.github_url || project.demo_url) && (
-              <div class="flex flex-wrap gap-4 mt-8">
-                {project.github_url && (
-                  <a
-                    href={project.github_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center px-6 py-3 bg-slate-700 text-slate-200 rounded-lg hover:bg-slate-600 transition-all hover:shadow-md border border-slate-600"
-                  >
-                    <svg
-                      class="w-5 h-5 mr-2"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-                    </svg>
-                    View Source Code
-                  </a>
-                )}
-                {project.demo_url && (
-                  <a
-                    href={project.demo_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all hover:shadow-md"
-                  >
-                    <svg
-                      class="w-5 h-5 mr-2"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
-                    View Demo
-                  </a>
-                )}
-              </div>
+            project.demo_url && (
+              <a
+                href={project.demo_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-primary-400 bg-primary-500/10 rounded-full border border-primary-500/30 hover:bg-primary-500/20 transition-colors"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path>
+                  <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path>
+                </svg>
+                Live Demo
+              </a>
             )
           }
         </div>
       </div>
 
-      {/* Project Updates */}
-      {
-        project.product_updates && project.product_updates.length > 0 && (
-          <div class="max-w-4xl mx-auto">
-            <h2 class="text-2xl font-bold text-slate-100 mb-6">
-              Updates
-            </h2>
-            <div class="space-y-6">
-              {project.product_updates.map((update: any) => (
-                <div class="bg-slate-800/50 rounded-xl shadow-md border border-slate-700 p-6 hover:shadow-lg transition-all">
-                  <div class="flex items-center justify-between mb-4">
-                    <div
-                      class={`
-                    inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium
-                    ${
-                      update.type === "milestone"
-                        ? "bg-purple-900/50 text-purple-300 border border-purple-700"
-                        : update.type === "progress"
-                          ? "bg-blue-900/50 text-blue-300 border border-blue-700"
-                          : update.type === "launch"
-                            ? "bg-emerald-900/50 text-emerald-300 border border-emerald-700"
-                            : "bg-amber-900/50 text-amber-300 border border-amber-700"
-                    }
-                  `}
-                    >
-                      <span class="mr-1.5">
-                        {update.type === "milestone"
-                          ? "🏆"
-                          : update.type === "progress"
-                            ? "📈"
-                            : update.type === "launch"
-                              ? "🚀"
-                              : "💡"}
-                      </span>
-                      {update.type.charAt(0).toUpperCase() +
-                        update.type.slice(1)}
+      {/* ──────────────────────────────────────────── */}
+      {/* SECTION 3: THE JOURNEY — TIMELINE            */}
+      {/* ──────────────────────────────────────────── */}
+      <section class="mb-16">
+        <h2 class="text-lg font-semibold text-slate-300 mb-8">The Journey</h2>
+
+        {
+          updates.length > 0 ? (
+            <div class="relative">
+              {/* Timeline line */}
+              <div class="absolute left-[15px] top-2 bottom-2 w-px bg-slate-800" />
+
+              <div class="space-y-8">
+                {updates.map((update: any) => {
+                  const typeConf =
+                    updateTypeConfig[update.type] || updateTypeConfig.progress;
+                  return (
+                    <div class="relative pl-10">
+                      {/* Timeline dot */}
+                      <div
+                        class={`absolute left-0 top-1 w-[31px] h-[31px] rounded-full ${typeConf.bgColor} border ${typeConf.borderColor} flex items-center justify-center text-sm`}
+                      >
+                        {typeConf.emoji}
+                      </div>
+
+                      {/* Update content */}
+                      <div>
+                        <div class="flex items-center gap-3 mb-2">
+                          <span
+                            class={`text-xs font-medium uppercase tracking-wider ${typeConf.color}`}
+                          >
+                            {typeConf.label}
+                          </span>
+                          <time class="text-xs text-slate-600">
+                            {formatDate(update.created_at)}
+                          </time>
+                        </div>
+                        <div class="text-slate-300 leading-relaxed whitespace-pre-wrap">
+                          {update.content}
+                        </div>
+                      </div>
                     </div>
-                    <time class="text-sm text-slate-400">
-                      {formatDate(update.created_at)}
-                    </time>
-                  </div>
-                  <p class="text-slate-300 whitespace-pre-wrap leading-relaxed">
-                    {update.content}
-                  </p>
-                </div>
-              ))}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )
-      }
-
-      {/* Comments Section */}
-      <div class="max-w-4xl mx-auto mt-16">
-        <h2 class="text-2xl font-bold text-slate-100 mb-6">Comments</h2>
-        <Comments productId={project.id} />
-      </div>
-
-      {/* Lessons Learned - Only show for completed projects */}
-      {
-        project.status === "completed" && project.lessons_learned && (
-          <div class="max-w-4xl mx-auto mt-12">
-            <div class="bg-emerald-900/20 rounded-xl p-8 border border-emerald-700/30 shadow-sm hover:shadow-md transition-all">
-              <h2 class="text-2xl font-bold text-emerald-200 mb-4 flex items-center gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-6 h-6"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                </svg>
-                Lessons Learned
-              </h2>
-              <p class="text-emerald-100 whitespace-pre-wrap leading-relaxed">
-                {project.lessons_learned}
+          ) : (
+            <div class="py-12 text-center">
+              <p class="text-slate-500 text-sm italic">
+                This story is just getting started. Check back for updates.
               </p>
             </div>
-          </div>
+          )
+        }
+      </section>
+
+      {/* ──────────────────────────────────────────── */}
+      {/* SECTION 4: THE OUTCOME — LESSONS LEARNED     */}
+      {/* (only for completed bets, end of the story)  */}
+      {/* ──────────────────────────────────────────── */}
+      {
+        project.status === "completed" && project.lessons_learned && (
+          <section class="mb-16">
+            <div class="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-6">
+              <div class="flex items-center gap-2 mb-4">
+                <span class="text-emerald-400 text-lg">📝</span>
+                <h2 class="text-base font-semibold text-emerald-300">
+                  Lessons Learned
+                </h2>
+              </div>
+              <div class="text-slate-300 leading-relaxed whitespace-pre-wrap">
+                {project.lessons_learned}
+              </div>
+            </div>
+          </section>
         )
       }
-    </div>
+
+      {/* ──────────────────────────────────────────── */}
+      {/* SECTION 5: THE COMMUNITY — COMMENTS          */}
+      {/* ──────────────────────────────────────────── */}
+      <section>
+        <h2 class="text-lg font-semibold text-slate-300 mb-8">What do you think?</h2>
+        <Comments productId={project.id} />
+      </section>
+    </article>
   </main>
 
   <Footer />
