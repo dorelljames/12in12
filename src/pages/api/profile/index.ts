@@ -31,47 +31,55 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const body = await request.json();
     const { username, full_name, bio, avatar_url, social_links } = body;
 
-    // Check if username is already taken (excluding current user)
-    const { data: existingUser, error: checkError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("username", username)
-      .neq("user_id", user.id)
-      .single();
+    // Only run username check and profile upsert when profile fields are provided
+    const hasProfileFields = username || full_name || bio || avatar_url;
 
-    if (checkError && checkError.code !== "PGRST116") {
-      // PGRST116 means no rows returned
-      console.error("Error checking username:", checkError);
-      throw checkError;
-    }
+    if (hasProfileFields) {
+      // Check if username is already taken (excluding current user)
+      if (username) {
+        const { data: existingUser, error: checkError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("username", username)
+          .neq("user_id", user.id)
+          .single();
 
-    if (existingUser) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Username is already taken",
-        }),
-        { status: 400 }
-      );
-    }
+        if (checkError && checkError.code !== "PGRST116") {
+          // PGRST116 means no rows returned
+          console.error("Error checking username:", checkError);
+          throw checkError;
+        }
 
-    // Update profile
-    const { error: updateError } = await supabase.from("profiles").upsert(
-      {
-        username,
-        full_name,
-        bio,
-        avatar_url,
-        user_id: user.id,
-      },
-      {
-        onConflict: "user_id",
+        if (existingUser) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "Username is already taken",
+            }),
+            { status: 400 }
+          );
+        }
       }
-    );
 
-    if (updateError) {
-      console.error("Error updating profile:", updateError);
-      throw updateError;
+      // Build update data with only provided fields
+      const updateData: Record<string, string> = { user_id: user.id };
+      if (username) updateData.username = username;
+      if (full_name) updateData.full_name = full_name;
+      if (bio) updateData.bio = bio;
+      if (avatar_url) updateData.avatar_url = avatar_url;
+
+      // Update profile
+      const { error: updateError } = await supabase.from("profiles").upsert(
+        updateData,
+        {
+          onConflict: "user_id",
+        }
+      );
+
+      if (updateError) {
+        console.error("Error updating profile:", updateError);
+        throw updateError;
+      }
     }
 
     // Update social links
