@@ -121,13 +121,10 @@ const { data: latestProjects } = await supabase
     width: 100%;
     opacity: 0;
     animation: rotateWord 10s linear infinite;
-    background: linear-gradient(
-      to right,
-      var(--tw-gradient-from),
-      var(--tw-gradient-to)
-    );
+    background: linear-gradient(to right, #0072c4, #ff3b28);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .word:nth-child(2) {
