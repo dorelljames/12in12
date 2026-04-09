@@ -80,6 +80,16 @@ if (accessToken && refreshToken) {
         {
           sessionUser ? (
             <div class="flex items-center space-x-4">
+              <button
+                id="global-share-update"
+                data-username={profile?.username}
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 rounded-full border border-emerald-500/30 hover:bg-emerald-500/20 transition-colors"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                Update
+              </button>
               <NotificationBell user={sessionUser} />
               <div class="relative" id="user-menu">
                 <button
@@ -119,12 +129,21 @@ if (accessToken && refreshToken) {
                   aria-labelledby="user-menu-button"
                 >
                   <div class="py-1">
+                    {profile?.username && (
+                      <a
+                        href={`/${profile.username}`}
+                        class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
+                        role="menuitem"
+                      >
+                        My Bets
+                      </a>
+                    )}
                     <a
                       href="/profile"
                       class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white"
                       role="menuitem"
                     >
-                      Profile
+                      Edit Profile
                     </a>
                     <a
                       href="/api/auth/signout"
@@ -153,6 +172,22 @@ if (accessToken && refreshToken) {
 </div>
 
 <script>
+  // Global share update button
+  const globalShareBtn = document.getElementById("global-share-update");
+  if (globalShareBtn) {
+    globalShareBtn.addEventListener("click", () => {
+      const modal = document.getElementById("shareUpdateModal");
+      if (modal) {
+        modal.classList.remove("hidden");
+      } else {
+        const username = globalShareBtn.getAttribute("data-username");
+        if (username) {
+          window.location.href = `/${username}`;
+        }
+      }
+    });
+  }
+
   const userMenuButton = document.getElementById("user-menu-button");
   const userMenuDropdown = document.getElementById("user-menu-dropdown");
   const userMenu = document.getElementById("user-menu");
