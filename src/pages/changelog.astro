@@ -1,0 +1,165 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+
+const title = "Changelog - 12 in 12";
+const description =
+  "What's new on 12in12. Follow along as we build this platform in public.";
+
+// Changelog entries — newest first
+// Add new entries to the top of this array
+const entries = [
+  {
+    date: "2026-04-09",
+    title: "Project & profile pages redesigned",
+    type: "feature",
+    items: [
+      "Project detail page is now a narrative journey — thesis first, timeline of updates as the star, accountability bar with deadline countdown",
+      "Public profile page redesigned with compact header, \"The Story So Far\" timeline, and editorial bet cards with cover images",
+      "Product updates now properly fetched and displayed (were missing from the query before)",
+    ],
+  },
+  {
+    date: "2026-04-09",
+    title: "Bug fixes",
+    type: "fix",
+    items: [
+      "Fixed saving social links on profile page (was crashing with a 500 error)",
+      "Fixed invisible rotating words on mobile homepage hero",
+      "Fixed broken card layout on bets page caused by nested anchor tags",
+    ],
+  },
+  {
+    date: "2026-04-07",
+    title: "Narrative milestones",
+    type: "feature",
+    items: [
+      "When you change a bet's motivation (e.g., craft → profit), the platform now prompts you to tell that part of the story",
+    ],
+  },
+  {
+    date: "2026-04-06",
+    title: "Platform stability",
+    type: "fix",
+    items: [
+      "Fixed broken layout and unreadable text on legal pages",
+      "Fixed crash on bets page caused by undefined month variable",
+      "Fixed join route for Cloudflare Workers runtime",
+      "Fixed auth user lookup using Postgres RPC instead of broken listUsers API",
+    ],
+  },
+  {
+    date: "2026-04-01",
+    title: "The big relaunch begins",
+    type: "feature",
+    items: [
+      "Renamed \"projects\" to \"bets\" across the platform — because betting on yourself is the identity",
+      "Revamped homepage with new hero, live community feed, and stats",
+      "Added motivation field to bets: For Profit, For Impact, or For Craft",
+      "Added \"Polish with AI\" button for descriptions, lessons, and updates",
+      "Rewrote About page and FAQ to match the new vision",
+      "Added relaunch banner across the site",
+    ],
+  },
+  {
+    date: "2026-03-28",
+    title: "Tailwind v4 upgrade",
+    type: "improvement",
+    items: [
+      "Upgraded from Tailwind CSS v3 to v4",
+      "Fixed global CSS imports across layouts",
+      "Switched legal pages to dark theme for consistency",
+    ],
+  },
+];
+
+const typeConfig: Record<string, { label: string; color: string; bgColor: string; borderColor: string }> = {
+  feature: { label: "New", color: "text-emerald-400", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/30" },
+  fix: { label: "Fix", color: "text-amber-400", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/30" },
+  improvement: { label: "Improved", color: "text-blue-400", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/30" },
+};
+
+const formatDate = (dateStr: string) => {
+  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+---
+
+<Layout title={title}>
+  <head slot="head">
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+  </head>
+
+  <Navbar />
+
+  <main class="bg-slate-900 pt-24 pb-16">
+    <article class="mx-auto max-w-3xl px-4 sm:px-6">
+      <header class="mt-4 mb-12">
+        <h1 class="text-3xl font-bold text-white tracking-tight mb-3">
+          Changelog
+        </h1>
+        <p class="text-slate-400">
+          What's new on 12in12. We're building this platform in public — here's
+          the proof.
+        </p>
+      </header>
+
+      <div class="relative">
+        {/* Timeline line */}
+        <div class="absolute left-[7px] top-3 bottom-3 w-px bg-slate-800"></div>
+
+        <div class="space-y-12">
+          {
+            entries.map((entry) => {
+              const type = typeConfig[entry.type] || typeConfig.improvement;
+              return (
+                <div class="relative pl-10">
+                  {/* Timeline dot */}
+                  <div
+                    class={`absolute left-0 top-1.5 w-[15px] h-[15px] rounded-full ${type.bgColor} border ${type.borderColor}`}
+                  />
+
+                  {/* Entry */}
+                  <div>
+                    <div class="flex flex-wrap items-center gap-3 mb-2">
+                      <span
+                        class={`px-2 py-0.5 rounded-full text-xs font-medium ${type.bgColor} ${type.color} border ${type.borderColor}`}
+                      >
+                        {type.label}
+                      </span>
+                      <time class="text-sm text-slate-500">
+                        {formatDate(entry.date)}
+                      </time>
+                    </div>
+
+                    <h2 class="text-lg font-semibold text-white mb-3">
+                      {entry.title}
+                    </h2>
+
+                    <ul class="space-y-2">
+                      {entry.items.map((item) => (
+                        <li class="flex gap-2 text-sm text-slate-400 leading-relaxed">
+                          <span class="text-slate-600 mt-1 flex-shrink-0">
+                            &bull;
+                          </span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              );
+            })
+          }
+        </div>
+      </div>
+    </article>
+  </main>
+
+  <Footer />
+</Layout>
