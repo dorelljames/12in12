@@ -82,41 +82,35 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       }
     }
 
-    // Update social links
+    // Update social links: delete all then re-insert
     if (social_links) {
-      if (social_links.length === 0) {
-        // If empty array, delete all social links
-        await supabase
+      // Delete existing social links for user
+      const { error: deleteError } = await supabase
+        .from("social_links")
+        .delete()
+        .eq("user_id", user.id);
+
+      if (deleteError) {
+        console.error("Error deleting social links:", deleteError);
+        throw deleteError;
+      }
+
+      // Insert new social links if any
+      if (social_links.length > 0) {
+        const { error: insertError } = await supabase
           .from("social_links")
-          .delete()
-          .eq("user_id", user.id);
-      } else {
-        // Upsert each social link (unique on user_id + platform)
-        const { error: upsertError } = await supabase
-          .from("social_links")
-          .upsert(
+          .insert(
             social_links.map((link: { platform: string; url: string }) => ({
               user_id: user.id,
               platform: link.platform,
               url: link.url,
-            })),
-            { onConflict: "user_id,platform" }
+            }))
           );
 
-        if (upsertError) {
-          console.error("Error updating social links:", upsertError);
-          throw upsertError;
+        if (insertError) {
+          console.error("Error inserting social links:", insertError);
+          throw insertError;
         }
-
-        // Remove platforms that are no longer in the list
-        const platforms = social_links.map(
-          (link: { platform: string }) => link.platform
-        );
-        await supabase
-          .from("social_links")
-          .delete()
-          .eq("user_id", user.id)
-          .not("platform", "in", `(${platforms.join(",")})`);
       }
     }
 
